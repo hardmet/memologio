@@ -2,12 +2,11 @@ package ru.hardmet.memologio
 package posts
 
 import com.twitter.finagle.http.Response
-import ru.hardmet.memologio.posts.Posts
 import ru.tinkoff.tschema.custom.syntax._
 import ru.tinkoff.tschema.finagle.MkService
 import ru.tinkoff.tschema.swagger.{MkSwagger, SwaggerBuilder}
 import ru.tinkoff.tschema.syntax._
-import zio.{RIO, URIO, ZIO}
+import zio.{RIO, URIO}
 
 object PostModule extends HttpModule {
 

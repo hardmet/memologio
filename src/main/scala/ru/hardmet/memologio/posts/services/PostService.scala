@@ -1,12 +1,11 @@
-package ru.hardmet.memologio.posts.services
+package ru.hardmet.memologio.posts
+package services
 
 import java.util.UUID
 
 import ru.hardmet.memologio.Memologio
-import ru.hardmet.memologio.posts.{Post, Posts}
 import ru.hardmet.memologio.config.Config
 import ru.hardmet.memologio.db.DB
-import ru.hardmet.memologio.posts.{PostData, PostId}
 import zio.{UIO, URLayer}
 
 object PostService {
@@ -26,5 +25,5 @@ object PostService {
   val db: URLayer[DB, Posts]              = DBService.live
   val logging: URLayer[Posts, Posts] = LoggedService.live
 
-  def newId: UIO[PostId] = UIO.effectTotal(PostId(UUID.randomUUID()))
+  def newId[T](app: UUID => T): UIO[T] = UIO.effectTotal(app(UUID.randomUUID()))
 }

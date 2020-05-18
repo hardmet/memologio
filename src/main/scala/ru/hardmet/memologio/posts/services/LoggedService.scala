@@ -1,11 +1,10 @@
-package ru.hardmet.memologio.posts.services
+package ru.hardmet.memologio.posts
+package services
 
 import ru.hardmet.memologio
 import ru.hardmet.memologio._
 import ru.hardmet.memologio.logs
-import ru.hardmet.memologio.posts.{Post, Posts}
 import ru.hardmet.memologio.posts.services.PostService.Service
-import ru.hardmet.memologio.posts.{PostData, PostId}
 import ru.hardmet.memologio.{Logger, Memologio}
 import tofu.syntax.logging._
 import zio.{URLayer, ZIO, ZLayer}

@@ -156,6 +156,7 @@ libraryDependencies += "com.softwaremill.sttp.client" %% "async-http-client-back
 libraryDependencies += "com.softwaremill.sttp.client" %% "circe"                         % sttpVersion
 libraryDependencies += "org.tpolecat"                 %% "doobie-core"                   % doobieVersion
 libraryDependencies += "org.tpolecat"                 %% "doobie-h2"                     % doobieVersion
+libraryDependencies += "org.tpolecat"                 %% "doobie-postgres"               % doobieVersion
 libraryDependencies += "ch.qos.logback"               % "logback-classic"                % logbackVersion
 libraryDependencies += "com.typesafe.akka"            %% "akka-actor-typed"              % akkaVersion
 

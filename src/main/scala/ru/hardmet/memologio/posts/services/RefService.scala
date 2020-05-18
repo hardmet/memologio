@@ -6,7 +6,6 @@ import java.util.UUID
 import cats.instances.list._
 import cats.syntax.traverse._
 import ru.hardmet.memologio.Memologio
-import ru.hardmet.memologio.posts.{Post, Posts}
 import ru.hardmet.memologio.config.Config
 import ru.hardmet.memologio.entities.Entities
 import ru.hardmet.memologio.posts.services.RefService.State
@@ -29,10 +28,10 @@ class RefService(ref: Ref[State]) extends PostService.Service {
       id     = PostId(uuid)
       entity <- Entities.makeEntity(id, data)
       added <- ref.modify(m =>
-        if (m.contains(data.name)) (false, m)
-        else (true, m + (data.name -> entity))
+        if (m.contains(data.source)) (false, m)
+        else (true, m + (data.source -> entity))
       )
-      _ <- ZIO.fail(AlreadyExists(data.name)).when(!added)
+      _ <- ZIO.fail(AlreadyExists(data.source)).when(!added)
     } yield id
 
   def remove(name: String): Task[Unit] =
@@ -46,9 +45,9 @@ object RefService {
   private def initialState: URIO[Config, State] =
     ZIO.accessM[Config](_.get.posts.initial.traverse { data =>
       for {
-        id     <- PostService.newId
+        id     <- PostService.newId(x => PostId(x))
         entity = Entities.initEntity(id, data)
-      } yield data.name -> entity
+      } yield data.source -> entity
     }.map(_.toMap))
 
   type State = Map[String, Post]
