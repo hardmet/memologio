@@ -36,7 +36,7 @@ object OpenAPI {
         PathDescription.utf8I18n("swagger", Locale.forLanguageTag("ru"))
       val json = swaggerBuilder
         .describe(descriptions)
-        .make(OpenApiInfo("fintech school", version = "0.0.1"))
+        .make(OpenApiInfo("memologio", version = "0.0.1"))
         .asJson
         .printWith(printer)
       message.jsonResponse(json)

@@ -34,7 +34,7 @@ object Server {
   } yield binding
 
   private def report(srv: ListeningServer) =
-    s"started at http://${srv.boundAddress} see also ru.hardmet.memologio.f.http:/${srv.boundAddress}/swagger.php for swagger-ui "
+    s"started at http://${srv.boundAddress} see also memologio http:/${srv.boundAddress}/swagger.php for swagger-ui "
 
   /** Сервер как ресурс - когда процесс, использующий сервер будет прерван
    * сервер будет остановлен

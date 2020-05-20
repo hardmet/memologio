@@ -6,21 +6,39 @@ import java.sql.SQLIntegrityConstraintViolationException
 import java.util.UUID
 
 import doobie.implicits._
-import doobie.util.{Get, Put}
 import doobie.util.query.Query0
 import doobie.util.transactor.Transactor
 import doobie.util.update.{Update, Update0}
-import ru.hardmet.memologio.{Memologio, _}
 import ru.hardmet.memologio.db.DB
 import ru.hardmet.memologio.posts.services.DBService._
 import ru.hardmet.memologio.posts.services.PostService.Service
+import ru.hardmet.memologio.{Memologio, _}
 import zio._
+
+
+import doobie.postgres.implicits._
+import tofu.logging.Logging
+import tofu.syntax.logging._
 
 import scala.collection.compat.immutable.ArraySeq
 
 class DBService(xa: Transactor[Task]) extends Service {
   def getData: Memologio[Seq[PostData]] =
-    SQL.getData.stream.compile.to[ArraySeq].transact(xa)
+    SQL.getData.stream.compile.to[ArraySeq].transact(xa).map {
+      sourceAndTags =>
+        sourceAndTags.groupBy { case (source, _) => source }.values.map {
+          sourceAndTagsGroup =>
+            PostData(
+              sourceAndTagsGroup.head._1,
+              sourceAndTagsGroup.map(_._2).foldLeft(List.empty[TagData]) {
+                case (tags, tagOption) =>
+                  tagOption.fold(tags){
+                    name => TagData(name) :: tags
+                  }
+              }
+            )
+        }.toSeq
+    }
 
   def getOne(name: String): Memologio[Post] = ???
 
@@ -43,20 +61,20 @@ object DBService {
     ZLayer.fromEffect(ZIO.access[DB](r => new DBService(r.get.transactor)))
 
   object SQL {
+    type TagWrapper = (UUID, String, UUID)
+
     import cats.implicits._
+    import doobie.util._
 
-//    implicit val tagGet: Get[TagData] = Get[(Option[UUID], String, UUID)].tmap{ case (id: Option[UUID], name: String, postId: UUID) => TagData(id, name, postId)}
-//    implicit val tagPut: Put[TagData] = Put[(Option[UUID], String, UUID)].tcontramap(x => (x.uuid, x.name, x.postId))
 
-//    implicit val uuidGet: Get[UUID] = Get[String].tmap(id => UUID.fromString(id))
-//    implicit val uuidPut: Put[UUID] = Put[String].tcontramap(x => x.toString)
-
-    val getData: Query0[PostData] = sql"SELECT source, tags.id, tags.name FROM posts as p left join tags on p.id = post_id".query
+    val getData: doobie.Query0[(String, Option[String])] =
+      sql"SELECT p.source, tags.name FROM posts as p left join tags on p.id = post_id"
+        .query[(String, Option[String])]
 
     def putOne(data: PostData, id: PostId, tagIds: List[TagId]): doobie.ConnectionIO[Int] = {
-      val insertPost = sql"INSERT INTO posts (id, source) VALUES (${id.uuid}, ${data.source})".update.run
-      val insertTags = Update[TagData]("insert into tags (id, name, post_id) values (?, ?, ?)")
-        .updateMany(data.tags.zip(tagIds).map{ case (tag, tagId) => tag.copy(uuid = Option(tagId.uuid))})
+      val insertPost: doobie.ConnectionIO[Int] = sql"INSERT INTO posts (id, source) VALUES (${id.uuid}, ${data.source})".update.run
+      val insertTags: doobie.ConnectionIO[Int] = Update[TagWrapper]("insert into tags (id, name, post_id) values (?, ?, ?)")
+        .updateMany(data.tags.zip(tagIds).map{ case (tag, tagId) => (tagId.uuid, tag.name, id.uuid)})
       (insertPost, insertTags).mapN(_ + _)
     }
 

@@ -17,7 +17,7 @@ final case class PostData(source: String, tags: List[TagData])
 final case class PostId(uuid: UUID)
 
 @derive(codec, Swagger, config, loggable, AsOpenApiParam)
-final case class TagData(uuid: Option[UUID] = None, name: String, postId: UUID)
+final case class TagData(name: String)
 
 @derive(codec, Swagger, loggable, HttpParam, AsOpenApiParam)
 final case class TagId(uuid: UUID)

@@ -5,7 +5,9 @@ import derevo.pureconfig.config
 
 @derive(config)
 case class DBConfig(
-    url: String,
+    host: String,
+    port: Int,
+    database: String,
     user: String,
     password: String
 )
