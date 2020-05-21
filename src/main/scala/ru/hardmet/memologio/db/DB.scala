@@ -37,7 +37,4 @@ object DB {
         }.toManagedZIO
       } yield Service(trans)
     )
-//  trans <- Transactor.fromDriverManager[Task](
-//    "org.postgresql.Driver", conf.url, conf.user, conf.password
-//  )
 }

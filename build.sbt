@@ -159,6 +159,7 @@ libraryDependencies += "org.tpolecat"                 %% "doobie-h2"            
 libraryDependencies += "org.tpolecat"                 %% "doobie-postgres"               % doobieVersion
 libraryDependencies += "ch.qos.logback"               % "logback-classic"                % logbackVersion
 libraryDependencies += "com.typesafe.akka"            %% "akka-actor-typed"              % akkaVersion
+libraryDependencies += "net.ruippeixotog"             %% "scala-scraper"                 % "2.2.0"
 
 addCompilerPlugin(
   "com.olegpy" %% "better-monadic-for" % "0.3.1"
