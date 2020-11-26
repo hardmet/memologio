@@ -4,7 +4,7 @@ import derevo.derive
 import derevo.pureconfig.config
 import pureconfig.ConfigSource
 import ru.hardmet.memologio.posts.PostsConfig
-import ru.hardmet.memologio.db.DBConfig
+import ru.hardmet.memologio.repository.DBConfig
 import ru.hardmet.memologio.http.ServerConfig
 import zio.blocking.{Blocking, effectBlocking}
 import zio.{RLayer, ZLayer}

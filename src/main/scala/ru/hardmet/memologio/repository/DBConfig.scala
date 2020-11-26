@@ -1,4 +1,4 @@
-package ru.hardmet.memologio.db
+package ru.hardmet.memologio.repository
 
 import derevo.derive
 import derevo.pureconfig.config

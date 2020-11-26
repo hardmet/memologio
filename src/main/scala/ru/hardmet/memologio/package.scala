@@ -5,7 +5,6 @@ import java.util.UUID
 import cats.effect.{Concurrent, ContextShift}
 import cats.{ApplicativeError, Monad}
 import ru.hardmet.memologio.MemologioEnv
-import ru.hardmet.memologio.posts.Posts
 import ru.hardmet.memologio.config.Config
 import ru.hardmet.memologio.http.{HttpClient, ReqInfo, ResourceCache}
 import ru.tinkoff.tschema.finagle.zioRouting.RIOH
@@ -21,8 +20,7 @@ package object memologio extends LowPriorInstances {
   type SystemEnv  = Blocking with Clock with Console
   type LoggingEnv = ReqInfo
   type MemologioEnv =
-    ResourceCache with Config with Posts with SystemEnv with LoggingEnv with HttpClient
-  //MemologioEnv => Future[A]
+    ResourceCache with Config with SystemEnv with LoggingEnv with HttpClient
 
   type Memologio[+A]     = RIO[MemologioEnv, A]
   type MemologioHttp[+A] = RIOH[MemologioEnv, A]

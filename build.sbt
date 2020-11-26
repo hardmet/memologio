@@ -36,6 +36,7 @@ val magnoliaVersion   = "0.12.3"
 val sttpVersion       = "2.0.7"
 val pureconfigVersion = "0.12.3"
 val doobieVersion     = "0.8.8"
+val skunkVersion      = "0.0.21"
 val logbackVersion    = "1.2.3"
 
 libraryDependencies += "org.scalactic"  %% "scalactic"            % "3.0.8"
@@ -89,8 +90,9 @@ libraryDependencies += "com.github.fomkin" %% "korolev-async"               % ko
 
 libraryDependencies += "com.propensive" %% "magnolia" % magnoliaVersion
 
-addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1")
-addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.11.0" cross CrossVersion.patch)
+addCompilerPlugin("com.olegpy"     %% "better-monadic-for" % "0.3.1")
+addCompilerPlugin("org.typelevel"  %% "kind-projector"     % "0.11.0" cross CrossVersion.patch)
+addCompilerPlugin("org.augustjune" %% "context-applied"    % "0.1.4")
 
 addCompilerPlugin("org.wartremover" %% "wartremover" % "2.4.5" cross CrossVersion.full)
 
@@ -122,6 +124,7 @@ libraryDependencies += "com.softwaremill.sttp.client" %% "circe"                
 libraryDependencies += "org.tpolecat"                 %% "doobie-core"                   % doobieVersion
 libraryDependencies += "org.tpolecat"                 %% "doobie-h2"                     % doobieVersion
 libraryDependencies += "org.tpolecat"                 %% "doobie-postgres"               % doobieVersion
+libraryDependencies += "org.tpolecat"                 %% "skunk-core"                    % skunkVersion
 libraryDependencies += "ch.qos.logback"               % "logback-classic"                % logbackVersion
 libraryDependencies += "com.typesafe.akka"            %% "akka-actor-typed"              % akkaVersion
 libraryDependencies += "net.ruippeixotog"             %% "scala-scraper"                 % "2.2.0"

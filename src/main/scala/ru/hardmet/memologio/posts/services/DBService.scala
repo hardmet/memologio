@@ -9,7 +9,8 @@ import doobie.implicits._
 import doobie.util.query.Query0
 import doobie.util.transactor.Transactor
 import doobie.util.update.{Update, Update0}
-import ru.hardmet.memologio.db.DB
+import ru.hardmet.memologio.repository.DB
+import fs2.Collector._
 import ru.hardmet.memologio.posts.services.DBService._
 import ru.hardmet.memologio.posts.services.PostService.Service
 import ru.hardmet.memologio.{Memologio, _}
@@ -24,7 +25,7 @@ import scala.collection.compat.immutable.ArraySeq
 
 class DBService(xa: Transactor[Task]) extends Service {
   def getData: Memologio[Seq[PostData]] =
-    SQL.getData.stream.compile.to[ArraySeq].transact(xa).map {
+    SQL.getData.stream.compile.to(supportsArray(Array)).transact(xa).map {
       sourceAndTags =>
         sourceAndTags.groupBy { case (source, _) => source }.values.map {
           sourceAndTagsGroup =>
@@ -39,8 +40,6 @@ class DBService(xa: Transactor[Task]) extends Service {
             )
         }.toSeq
     }
-
-  def getOne(name: String): Memologio[Post] = ???
 
   def putOne(data: PostData): Memologio[PostId] =
       (for {
@@ -57,8 +56,6 @@ class DBService(xa: Transactor[Task]) extends Service {
 }
 
 object DBService {
-  val live: URLayer[DB, Posts] =
-    ZLayer.fromEffect(ZIO.access[DB](r => new DBService(r.get.transactor)))
 
   object SQL {
     type TagWrapper = (UUID, String, UUID)
