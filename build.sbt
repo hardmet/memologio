@@ -102,41 +102,6 @@ scalacOptions += "-P:wartremover:traverser:org.wartremover.warts.Return"
 scalacOptions += "-P:wartremover:traverser:org.wartremover.warts.Var"
 scalacOptions += "-P:wartremover:traverser:org.wartremover.warts.While"
 
-//val appSettings = List(
-//  scalaVersion := "2.13.2",
-//  libraryDependencies += "ru.tinkoff"                   %% "tofu"                          % tofuVersion,
-//  libraryDependencies += "ru.tinkoff"                   %% "tofu-logging"                  % tofuVersion,
-//  libraryDependencies += "ru.tinkoff"                   %% "tofu-derivation"               % tofuVersion,
-//  libraryDependencies += "ru.tinkoff"                   %% "tofu-zio-interop"              % tofuVersion,
-//  libraryDependencies += "ru.tinkoff"                   %% "typed-schema-finagle-zio"      % tschemaVersion,
-//  libraryDependencies += "ru.tinkoff"                   %% "typed-schema-finagle-env"      % tschemaVersion,
-//  libraryDependencies += "ru.tinkoff"                   %% "typed-schema-finagle-custom"   % tschemaVersion,
-//  libraryDependencies += "ru.tinkoff"                   %% "typed-schema-swagger"          % tschemaVersion,
-//  libraryDependencies += "ru.tinkoff"                   %% "typed-schema-swagger-ui"       % tschemaVersion,
-//  libraryDependencies += "org.manatki"                  %% "derevo-cats"                   % derevoVersion,
-//  libraryDependencies += "org.manatki"                  %% "derevo-pureconfig"             % derevoVersion,
-//  libraryDependencies += "org.manatki"                  %% "derevo-circe"                  % derevoVersion,
-//  libraryDependencies += "org.manatki"                  %% "derevo-tethys"                 % derevoVersion,
-//  libraryDependencies += "com.softwaremill.sttp.client" %% "core"                          % sttpVersion,
-//  libraryDependencies += "com.softwaremill.sttp.client" %% "async-http-client-backend-zio" % sttpVersion,
-//  libraryDependencies += "com.softwaremill.sttp.client" %% "circe"                         % sttpVersion,
-//  libraryDependencies += "org.tpolecat"                 %% "doobie-core"                   % doobieVersion,
-//  libraryDependencies += "org.tpolecat"                 %% "doobie-h2"                     % doobieVersion,
-//  libraryDependencies += "ch.qos.logback"               % "logback-classic"                % logbackVersion,
-//  libraryDependencies += "com.typesafe.akka"            %% "akka-actor-typed"              % akkaVersion,
-//  addCompilerPlugin(
-//    "com.olegpy" %% "better-monadic-for" % "0.3.1"
-//  ),
-//  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.patch),
-//  scalacOptions := List(
-//    "-encoding",
-//    "utf8",
-//    "-feature",
-//    "-Ymacro-annotations",
-//    "-deprecation",
-//    "-language:_"
-//  )
-//)
 
 libraryDependencies += "ru.tinkoff"                   %% "tofu"                          % tofuVersion
 libraryDependencies += "ru.tinkoff"                   %% "tofu-logging"                  % tofuVersion

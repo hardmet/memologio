@@ -1,4 +1,8 @@
 target
+project/target
+project/project
+out
+data
 .idea
 
 .vscode
