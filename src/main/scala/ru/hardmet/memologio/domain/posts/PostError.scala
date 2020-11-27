@@ -1,12 +1,11 @@
-package ru.hardmet.memologio
-package posts
+package ru.hardmet.memologio.domain.posts
 
 import derevo.cats.show
 import derevo.circe.codec
 import derevo.derive
+import ru.hardmet.memologio.MemologioError
 import ru.tinkoff.tschema.custom.derivation._
 import ru.tinkoff.tschema.swagger.Swagger
-import cats.instances.string._
 
 sealed abstract class PostError(message: String) extends MemologioError(message)
 

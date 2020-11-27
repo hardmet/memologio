@@ -12,9 +12,9 @@ import skunk.{Codec, Command, Fragment, Query, Void, ~}
 import skunk.codec.all._
 import skunk.implicits._
 import ru.hardmet.memologio.domain.posts.Post
-import ru.hardmet.memologio.repository.skunk_interpreter.PostRepositoryInterpreter.ChunkSizeInBytes
+import ru.hardmet.memologio.repository.skunk_interpreter.SkunkPostRepositoryInterpreter.ChunkSizeInBytes
 
-class PostRepositoryInterpreter[F[_]: effect.Sync](val sessionResource: effect.Resource[F, skunk.Session[F]]) extends PostRepository[F, UUID] {
+class SkunkPostRepositoryInterpreter[F[_]: effect.Sync](val sessionResource: effect.Resource[F, skunk.Session[F]]) extends PostRepository[F, UUID] {
   import PostStatements._
 
   override def create(post: Post[UUID]): F[Post.Existing[UUID]] =
@@ -92,7 +92,7 @@ class PostRepositoryInterpreter[F[_]: effect.Sync](val sessionResource: effect.R
     }
 }
 
-object PostRepositoryInterpreter {
+object SkunkPostRepositoryInterpreter {
   private [skunk_interpreter] val ChunkSizeInBytes: Int = 1024
 }
 
