@@ -1,4 +1,6 @@
-package ru.hardmet.memologio.domain.posts
+package ru.hardmet.memologio
+package domain
+package posts
 
 import derevo.cats.show
 import derevo.circe.codec

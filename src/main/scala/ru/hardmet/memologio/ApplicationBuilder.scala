@@ -3,10 +3,11 @@ package ru.hardmet.memologio
 import java.util.UUID
 
 import cats.effect.{ConcurrentEffect, ContextShift, Resource, Timer}
+import natchez.Trace.Implicits.noop
 import ru.hardmet.memologio.config.{AppConfig, ServerConfig}
 import ru.hardmet.memologio.http.routes.Router
 import ru.hardmet.memologio.http.server.HttpServer
-import ru.hardmet.memologio.repository.DBConnector
+import ru.hardmet.memologio.repository.{DBConnector, SkunkConnector}
 import ru.hardmet.memologio.services.PostService
 
 import scala.concurrent.ExecutionContext
@@ -19,8 +20,6 @@ trait ApplicationBuilder[F[_], PostId] {
 
   val dbConnector: DBConnector[F, PostId]
 
-  val postService: PostService[F, PostId]
-
   def router(postService: PostService[F, PostId]): Router[F, PostId]
 
   def create: F[Unit]
@@ -28,8 +27,7 @@ trait ApplicationBuilder[F[_], PostId] {
 
 class ApplicationBuilderBase[F[_] : ConcurrentEffect : ContextShift : Timer](val executionContext: ExecutionContext) extends ApplicationBuilder[F, UUID] {
   override val configReader: F[AppConfig] = AppConfig.init[F]
-  override val dbConnector: DBConnector[F, UUID] = ???
-  override val postService: PostService[F, UUID] = ???
+  override val dbConnector: DBConnector[F, UUID] = new SkunkConnector[F]()
 
   override def router(postService: PostService[F, UUID]): Router[F, UUID] = ???
 

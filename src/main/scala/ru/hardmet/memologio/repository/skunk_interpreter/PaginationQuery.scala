@@ -1,4 +1,6 @@
-package ru.hardmet.memologio.repository.skunk_interpreter
+package ru.hardmet.memologio
+package repository
+package skunk_interpreter
 
 import skunk.{Codec, Fragment, Query, Void}
 import skunk.codec.all.int4

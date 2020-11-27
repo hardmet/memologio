@@ -1,4 +1,5 @@
-package ru.hardmet.memologio.services
+package ru.hardmet.memologio
+package services
 
 import ru.hardmet.memologio.repository.PostRepository
 

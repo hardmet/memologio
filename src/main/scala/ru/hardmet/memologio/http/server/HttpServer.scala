@@ -1,4 +1,6 @@
-package ru.hardmet.memologio.http.server
+package ru.hardmet.memologio
+package http
+package server
 
 import cats.effect
 import org.http4s.implicits.http4sKleisliResponseSyntaxOptionT

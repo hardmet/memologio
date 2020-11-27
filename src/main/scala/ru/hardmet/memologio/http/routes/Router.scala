@@ -1,4 +1,6 @@
-package ru.hardmet.memologio.http.routes
+package ru.hardmet.memologio
+package http
+package routes
 
 import org.http4s.HttpRoutes
 import ru.hardmet.memologio.services.PostService
