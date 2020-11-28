@@ -1,7 +1,7 @@
 package ru.hardmet.memologio
 package repository
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 
 import ru.hardmet.memologio.domain.posts.Post
 
@@ -17,7 +17,7 @@ trait PostRepository[F[_], PostId] {
 
   def findByPublishedDate(published: LocalDate): F[Vector[Post.Existing[PostId]]]
 
-//  def findByPublishedDateTime(published: LocalDateTime): F[List[Post[PostId]]] TODO
+  def findByPublishedDateTime(published: LocalDateTime): F[Vector[Post.Existing[PostId]]]
 
   def findWithLikesAbove(likes: Int): F[Vector[Post.Existing[PostId]]]
 

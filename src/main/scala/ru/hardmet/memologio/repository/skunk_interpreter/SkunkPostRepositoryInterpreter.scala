@@ -42,6 +42,9 @@ class SkunkPostRepositoryInterpreter[F[_]: Sync](val sessionResource: Resource[F
   override def findByPublishedDate(published: LocalDate): F[Vector[Post.Existing[UUID]]] =
     prepareQueryAndCompile(Select.byPublishedDate, published)
 
+  override def findByPublishedDateTime(published: LocalDateTime): F[Vector[Post.Existing[UUID]]] =
+    prepareQueryAndCompile(Select.byPublishedDateTime, published)
+
   override def findWithLikesAbove(likes: Int): F[Vector[Post.Existing[UUID]]] =
     prepareQueryAndCompile(Select.withLikesAbove, likes)
 
@@ -189,7 +192,14 @@ object PostStatements {
       sql"""
             SELECT *
               FROM todo
-             WHERE published ~ $date
+             WHERE published::date ~ $date
+         """.query(Post.Existing.codec)
+
+    val byPublishedDateTime: Query[LocalDateTime, Post.Existing[UUID]] =
+      sql"""
+            SELECT *
+              FROM todo
+             WHERE published ~ $timestamp
          """.query(Post.Existing.codec)
 
     val withLikesAbove: Query[Int, Post.Existing[UUID]] =
