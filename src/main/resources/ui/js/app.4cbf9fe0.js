@@ -72,7 +72,7 @@
                         type: "dark",
                         variant: "dark"
                     }
-                }, [a("b-navbar-brand", {attrs: {to: "/"}}, [e._v("Scala-School")]), a("b-navbar-nav", [a("b-nav-item", {
+                }, [a("b-navbar-brand", {attrs: {to: "/"}}, [e._v("memologio")]), a("b-navbar-nav", [a("b-nav-item", {
                     attrs: {
                         to: "/posts",
                         "active-class": "active",
