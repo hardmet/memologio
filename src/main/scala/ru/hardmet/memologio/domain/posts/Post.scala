@@ -5,11 +5,11 @@ package posts
 import java.time.LocalDateTime
 import java.util.UUID
 
-import derevo.circe.codec
-import derevo.derive
-import ru.tinkoff.tschema.param.HttpParam
-import ru.tinkoff.tschema.swagger.{AsOpenApiParam, Swagger}
-import tofu.logging.derivation.loggable
+//import derevo.circe.codec
+//import derevo.derive
+//import ru.tinkoff.tschema.param.HttpParam
+//import ru.tinkoff.tschema.swagger.{AsOpenApiParam, Swagger}
+//import tofu.logging.derivation.loggable
 
 
 sealed abstract class Post[+PostId] extends Product with Serializable {

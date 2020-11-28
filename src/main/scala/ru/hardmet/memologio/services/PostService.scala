@@ -1,13 +1,22 @@
 package ru.hardmet.memologio
 package services
 
-import ru.hardmet.memologio.repository.PostRepository
+import ru.hardmet.memologio.domain.posts.Post
 
-class PostService[F[_], PostId](val repository: PostRepository[F, PostId]) {
+trait PostService[F[_], PostId] extends Service[F] {
 
-}
+  def createOne(post: Post.Data): F[Post.Existing[PostId]]
+  def createMany(posts: Vector[Post.Data]): F[Vector[Post.Existing[PostId]]]
 
-object PostService {
-  def apply[F[_], PostId](postRepository: PostRepository[F, PostId]): PostService[F, PostId] =
-    new PostService[F, PostId](postRepository)
+  def readOneById(id: PostId): F[Option[Post.Existing[PostId]]]
+  def readManyById(ids: Vector[PostId]): F[Vector[Post.Existing[PostId]]]
+  def readManyByURL(url: String): F[Vector[Post.Existing[PostId]]]
+  def readAll: F[Vector[Post.Existing[PostId]]]
+
+  def updateOne(post: Post.Existing[PostId]): F[Post.Existing[PostId]]
+  def updateMany(posts: Vector[Post.Existing[PostId]]): F[Vector[Post.Existing[PostId]]]
+
+  def deleteOne(post: Post.Existing[PostId]): F[Unit]
+  def deleteMany(posts: Vector[Post.Existing[PostId]]): F[Unit]
+  def deleteAll(): F[Unit]
 }

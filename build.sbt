@@ -16,7 +16,7 @@ scalacOptions := List(
   "-language:_",
   "-Ymacro-annotations"
 )
-
+// TODO: clean dependencies
 val akkaVersion       = "2.6.5"
 val akkaHttpVersion   = "10.1.10"
 val circeVersion      = "0.12.1"
@@ -111,8 +111,8 @@ libraryDependencies += "ru.tinkoff"                   %% "tofu-logging"         
 libraryDependencies += "ru.tinkoff"                   %% "tofu-derivation"               % tofuVersion
 libraryDependencies += "ru.tinkoff"                   %% "tofu-zio-interop"              % tofuVersion
 libraryDependencies += "org.http4s"                   %% "http4s-blaze-server"           % httpVersion
-//libraryDependencies += "org.http4s"                   %% "http4s-blaze-server"           % httpVersion // todo
 libraryDependencies += "org.http4s"                   %% "http4s-dsl"                    % httpVersion
+libraryDependencies += "org.http4s"                   %% "http4s-circe"                  % httpVersion
 libraryDependencies += "ru.tinkoff"                   %% "typed-schema-finagle-zio"      % tschemaVersion
 libraryDependencies += "ru.tinkoff"                   %% "typed-schema-finagle-env"      % tschemaVersion
 libraryDependencies += "ru.tinkoff"                   %% "typed-schema-finagle-custom"   % tschemaVersion
