@@ -5,8 +5,7 @@ package skunk_interpreter
 import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
 
-import cats.effect
-import cats.effect.Bracket
+import cats.effect.{Bracket, Resource, Sync}
 import cats.syntax.all._
 import skunk.{Codec, Command, Fragment, Query, Void, ~}
 import skunk.codec.all._
@@ -14,7 +13,7 @@ import skunk.implicits._
 import ru.hardmet.memologio.domain.posts.Post
 import ru.hardmet.memologio.repository.skunk_interpreter.SkunkPostRepositoryInterpreter.ChunkSizeInBytes
 
-class SkunkPostRepositoryInterpreter[F[_]: effect.Sync](val sessionResource: effect.Resource[F, skunk.Session[F]]) extends PostRepository[F, UUID] {
+class SkunkPostRepositoryInterpreter[F[_]: Sync](val sessionResource: Resource[F, skunk.Session[F]]) extends PostRepository[F, UUID] {
   import PostStatements._
 
   override def create(post: Post[UUID]): F[Post.Existing[UUID]] =

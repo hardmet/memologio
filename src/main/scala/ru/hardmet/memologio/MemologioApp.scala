@@ -9,7 +9,7 @@ object Memologio extends App {
     implicit val cs: ContextShift[IO] = IO.contextShift(executionContext)
     implicit val timer: Timer[IO] = IO.timer(executionContext)
 
-    new ApplicationBuilderBase[cats.effect.IO](executionContext).create.unsafeRunSync()
+    new ApplicationBuilderBase[IO](executionContext).create.unsafeRunSync()
 }
 
 class MemologioError(message: String) extends RuntimeException(message, null, false, false) // TODO use or delete

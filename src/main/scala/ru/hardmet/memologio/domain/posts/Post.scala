@@ -15,13 +15,13 @@ import tofu.logging.derivation.loggable
 sealed abstract class Post[+PostId] extends Product with Serializable {
   protected type ThisType <: Post[PostId]
 
-  import Post._
-
-  final def fold[B](ifExisting: (PostId, Data) => B, ifData: (String, LocalDateTime, Int) => B): B =
-    this match {
-      case Existing(id, data)          => ifExisting(id, data)
-      case Data(url, published, likes) => ifData(url, published, likes)
-    }
+//  import Post._
+//  todo use or remove
+//  final def fold[B](ifExisting: (PostId, Data) => B, ifData: (String, LocalDateTime, Int) => B): B =
+//    this match {
+//      case Existing(id, data)          => ifExisting(id, data)
+//      case Data(url, published, likes) => ifData(url, published, likes)
+//    }
 
   def url: String
 
@@ -70,5 +70,5 @@ object Post {
   }
 }
 
-@derive(codec, Swagger, loggable, HttpParam, AsOpenApiParam)
+//@derive(codec, Swagger, loggable, HttpParam, AsOpenApiParam)
 final case class PostId(uuid: UUID)

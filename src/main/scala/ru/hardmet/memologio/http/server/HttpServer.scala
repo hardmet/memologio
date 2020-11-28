@@ -2,7 +2,7 @@ package ru.hardmet.memologio
 package http
 package server
 
-import cats.effect
+import cats.effect.{ConcurrentEffect, Timer}
 import org.http4s.implicits.http4sKleisliResponseSyntaxOptionT
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -17,7 +17,7 @@ trait HttpServer[F[_]] {
 }
 
 object HttpServer {
-  private def createServer[F[_] : effect.ConcurrentEffect : effect.Timer](executionContext: ExecutionContext)
+  private def createServer[F[_] : ConcurrentEffect : Timer](executionContext: ExecutionContext)
                                                                          (config: ServerConfig)
                                                                          (httpApp: HttpApp[F]): HttpServer[F] =
     new HttpServer[F] {
@@ -30,7 +30,7 @@ object HttpServer {
           .drain
     }
 
-  def create[F[_] : effect.ConcurrentEffect : effect.Timer](executionContext: ExecutionContext)
+  def create[F[_] : ConcurrentEffect : Timer](executionContext: ExecutionContext)
                                                            (config: ServerConfig)
                                                            (mappings: (String, HttpRoutes[F])*): F[HttpServer[F]] =
     F.delay(
