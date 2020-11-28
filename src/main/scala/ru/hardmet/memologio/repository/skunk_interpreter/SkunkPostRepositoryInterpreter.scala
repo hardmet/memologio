@@ -32,8 +32,9 @@ class SkunkPostRepositoryInterpreter[F[_]: Sync](val sessionResource: Resource[F
   override def update(post: Post.Existing[UUID]): F[Post.Existing[UUID]] =
     prepareAndQuery(Update.one, post)
 
-  override def get(id: UUID): F[Post.Existing[UUID]] =
-    prepareAndQuery(Select.one, id)
+  override def get(id: UUID): F[Option[Post.Existing[UUID]]] =
+    prepareQueryAndCompile(Select.one, id)
+      .map(_.headOption)
 
   override def getListByIds(ids: Vector[UUID]): F[Vector[Post.Existing[UUID]]] =
     prepareQueryAndCompile(Select.many(ids.size), ids.to(List))
@@ -50,8 +51,7 @@ class SkunkPostRepositoryInterpreter[F[_]: Sync](val sessionResource: Resource[F
   override def list(pageSize: Int, offset: Int): F[Vector[Post.Existing[UUID]]] =
     prepareQueryAndCompile(Select.allWithPagination, pageSize -> offset)
 
-  // TODO maybe should be def
-  override val listAll: F[Vector[Post.Existing[UUID]]] =
+  override def listAll(): F[Vector[Post.Existing[UUID]]] =
     sessionResource.use { session =>
       session
         .execute(Select.all)
@@ -67,6 +67,25 @@ class SkunkPostRepositoryInterpreter[F[_]: Sync](val sessionResource: Resource[F
             .execute(id)
             .void
         }
+    }
+
+
+  override def deleteMany(posts: Vector[Post.Existing[UUID]]): F[Unit] =
+    sessionResource.use{ session =>
+      session
+        .prepare(Delete.many(posts.size))
+        .use { preparedCommand =>
+          preparedCommand
+            .execute(posts.to(List).map(_.id))
+            .void
+        }
+    }
+
+  override def deleteAll(): F[Unit] =
+    sessionResource.use { session =>
+      session
+        .execute(Delete.all)
+        .void
     }
 
   private def prepareAndQuery[A, B](query: Query[A, B], statementParam: A): F[B] =
@@ -218,7 +237,6 @@ object PostStatements {
              WHERE id IN (${uuid.list(size)})
          """.command
 
-    // TODO remove
     val all: Command[Void] =
       sql"""
             DELETE

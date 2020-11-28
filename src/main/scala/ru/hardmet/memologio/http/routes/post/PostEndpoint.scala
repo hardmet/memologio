@@ -17,7 +17,7 @@ import org.http4s.circe._
 
 import scala.util.chaining.scalaUtilChainingOps
 
-// TODO: add all routes
+// TODO: coordinate routes with services
 class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, PostId], pattern: DateTimeFormatter)
                                       (implicit parse: Parse[String, PostId])
   extends Endpoint[F] {
@@ -29,7 +29,7 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
     case r @ PUT -> Root / id =>
       r.as[request.Post.Update].flatMap(update(id))
 
-    case GET -> Root :? URL(url) => searchByURL(url)
+    case GET -> Root :? Published(published) => searchByPublishedDate(published)
     case GET -> Root                   => showAll
     case GET -> Root / id              => searchById(id)
 
@@ -37,7 +37,7 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
     case DELETE -> Root / id => delete(id)
   }
 
-  object URL extends QueryParamDecoderMatcher[String]("url")
+  object Published extends QueryParamDecoderMatcher[String]("published")
 
   private def create(payload: request.Post.Create): F[Response[F]] =
     withPublishedPrompt(payload.published) { published =>
@@ -134,12 +134,16 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
       }
     }
 
-  private def searchByURL(url: String): F[Response[F]] =
-    service.readManyByURL(url).flatMap { posts =>
-      posts
-        .map(response.Post(pattern))
-        .asJson
-        .pipe(Ok(_))
+  private def searchByPublishedDate(published: String): F[Response[F]] =
+    withPublishedPrompt(published) { published =>
+      service
+        .readManyByPublishedDate(published.toLocalDate)
+        .flatMap { posts =>
+          posts
+            .map(response.Post(pattern))
+            .asJson
+            .pipe(Ok(_))
+        }
     }
 
   private def delete(id: String): F[Response[F]] =
