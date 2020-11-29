@@ -22,7 +22,7 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
                                       (implicit parse: Parse[String, PostId])
   extends Endpoint[F] {
 
-  override val routMapper: PartialFunction[Request[F], F[Response[F]]] = {
+  override def routMapper: PartialFunction[Request[F], F[Response[F]]] = {
     case r @ POST -> Root =>
       r.as[request.Post.Create].flatMap(create)
 

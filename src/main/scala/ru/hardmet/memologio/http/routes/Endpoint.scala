@@ -11,7 +11,7 @@ abstract class Endpoint[F[_]: Defer: Applicative] extends Http4sDsl[F] {
 
   val service: Service[F]
 
-  val routMapper: PartialFunction[Request[F], F[Response[F]]]
+  def routMapper: PartialFunction[Request[F], F[Response[F]]]
 
-  val routes: HttpRoutes[F] = HttpRoutes.of[F](routMapper)
+  def routes: HttpRoutes[F] = HttpRoutes.of[F](routMapper)
 }
