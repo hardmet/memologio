@@ -3,6 +3,7 @@ package http
 package server
 
 import cats.effect.{ConcurrentEffect, Timer}
+import cats.implicits.toSemigroupKOps
 import org.http4s.implicits.http4sKleisliResponseSyntaxOptionT
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -32,11 +33,11 @@ object HttpServer {
 
   def create[F[_] : ConcurrentEffect : Timer](executionContext: ExecutionContext)
                                                            (config: ServerConfig)
-                                                           (mappings: (String, HttpRoutes[F])*): F[HttpServer[F]] =
+                                                           (routes: HttpRoutes[F]*): F[HttpServer[F]] =
     F.delay(
       createServer(executionContext)(config)(
         Logger.httpApp(logHeaders = true, logBody = true)(
-          Router(mappings: _*)
+          Router("api" -> routes.reduceLeft(_ <+> _))
             .orNotFound
         )
       )

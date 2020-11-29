@@ -8,7 +8,6 @@ object Memologio extends App {
     val executionContext: ExecutionContext = ExecutionContext.global
     implicit val cs: ContextShift[IO] = IO.contextShift(executionContext)
     implicit val timer: Timer[IO] = IO.timer(executionContext)
-
     new ApplicationBuilderBase[IO](executionContext).create.unsafeRunSync()
 }
 

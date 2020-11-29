@@ -9,5 +9,5 @@ trait Router[F[_]] {
 
   val service: Service[F]
 
-  def routes: Seq[(String, HttpRoutes[F])]
+  def routes: HttpRoutes[F]
 }
