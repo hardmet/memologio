@@ -13,6 +13,8 @@ import skunk.implicits._
 import ru.hardmet.memologio.domain.posts.Post
 import ru.hardmet.memologio.repository.skunk_interpreter.SkunkPostRepositoryInterpreter.ChunkSizeInBytes
 
+import scala.util.control.NonFatal
+
 class SkunkPostRepositoryInterpreter[F[_]: Sync](val sessionResource: Resource[F, skunk.Session[F]]) extends PostRepository[F, UUID] {
   import PostStatements._
 
@@ -119,9 +121,11 @@ object SkunkPostRepositoryInterpreter {
 
 object PostStatements {
 
+  val UrlCodec: Codec[String] = varchar(512)
+
   final implicit private class TodoDataCompanionOps(private val data: Post.Data.type) {
     val codec: Codec[Post.Data] =
-      (text ~ timestamp ~ int4).gimap[Post.Data]
+      (UrlCodec ~ timestamp ~ int4).gimap[Post.Data]
   }
 
   final implicit private class TodoExistingCompanionOps(private val existing: Post.Existing.type) {
@@ -221,7 +225,7 @@ object PostStatements {
     val one: Query[Post.Existing[UUID], Post.Existing[UUID]] =
       sql"""
                UPDATE post
-                  SET url = $text, published = $timestamp, likes = $int4
+                  SET url = $UrlCodec, published = $timestamp, likes = $int4
                 WHERE id = $uuid
             RETURNING *
          """.query(Post.Existing.codec).contramap(toTwiddle)
