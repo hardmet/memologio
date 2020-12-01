@@ -179,7 +179,7 @@ object PostStatements {
       sql"""
             SELECT *
               FROM post
-             WHERE id ~ $uuid
+             WHERE id = $uuid
          """.query(Post.Existing.codec)
 
 
@@ -194,14 +194,14 @@ object PostStatements {
       sql"""
             SELECT *
               FROM todo
-             WHERE published::date ~ $date
+             WHERE published::date = $date
          """.query(Post.Existing.codec)
 
     val byPublishedDateTime: Query[LocalDateTime, Post.Existing[UUID]] =
       sql"""
             SELECT *
               FROM todo
-             WHERE published ~ $timestamp
+             WHERE published = $timestamp
          """.query(Post.Existing.codec)
 
     val withLikesAbove: Query[Int, Post.Existing[UUID]] =
