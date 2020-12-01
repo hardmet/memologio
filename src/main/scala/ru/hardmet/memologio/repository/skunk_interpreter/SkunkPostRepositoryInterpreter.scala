@@ -13,8 +13,6 @@ import skunk.implicits._
 import ru.hardmet.memologio.domain.posts.Post
 import ru.hardmet.memologio.repository.skunk_interpreter.SkunkPostRepositoryInterpreter.ChunkSizeInBytes
 
-import scala.util.control.NonFatal
-
 class SkunkPostRepositoryInterpreter[F[_]: Sync](val sessionResource: Resource[F, skunk.Session[F]]) extends PostRepository[F, UUID] {
   import PostStatements._
 

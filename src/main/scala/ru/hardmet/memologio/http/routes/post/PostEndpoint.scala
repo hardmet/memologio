@@ -3,17 +3,17 @@ package http
 package routes
 package post
 
+import java.net.URI
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-import domain.posts.Post
-
-import services.PostService
 import cats.effect.Sync
 import cats.syntax.all._
+import domain.posts.Post
 import io.circe.syntax._
 import org.http4s._
 import org.http4s.circe._
+import services.PostService
 
 import scala.util.chaining.scalaUtilChainingOps
 
@@ -41,11 +41,13 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
 
   private def create(payload: request.Post.Create): F[Response[F]] =
     withPublishedPrompt(payload.published) { published =>
-      service
-        .createOne(Post.Data(payload.url, published))
-        .map(response.Post(pattern))
-        .map(_.asJson)
-        .flatMap(Created(_))
+      withURLPrompt(payload.url) { url =>
+        service
+          .createOne(Post.Data(url, published))
+          .map(response.Post(pattern))
+          .map(_.asJson)
+          .flatMap(Created(_))
+      }
     }
 
 
@@ -160,23 +162,35 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
   private def toId(userInput: String): Either[String, PostId] =
     parse(userInput).leftMap(_.getMessage)
 
+  private def withURLPrompt(url: String)(onSuccess: String => F[Response[F]]): F[Response[F]] = {
+    val trimUrl = url.trim
+    nonEmptyCheck(trimUrl)("url")
+      .flatMap{ url =>
+        parseURL(url)
+      }
+      .fold(BadRequest(_), onSuccess)
+  }
+
+  def parseURL(url: String): Either[String, String] =
+    Either
+      .catchNonFatal{
+        URI.create(url)
+        url
+      }
+      .leftMap(_ => s"$url does not match the URI format.")
+
   private def withPublishedPrompt(published: String)(onSuccess: LocalDateTime => F[Response[F]]): F[Response[F]] =
     toLocalDateTime(published).fold(BadRequest(_), onSuccess)
 
   private def withLikesPrompt(likes: Int)(onSuccess: Int => F[Response[F]]): F[Response[F]] =
     parseLikes(likes).fold(BadRequest(_), onSuccess)
 
+  // TODO trim argument and add non-empty check
   private def toLocalDateTime(input: String): Either[String, LocalDateTime] = {
-    val formatter =
-      DateTimeFormatter
-        .ofPattern(PublishedPromptPattern)
-
-    val trimmedInput: String = input.trim
-
     Either
-      .catchNonFatal(LocalDateTime.parse(trimmedInput, formatter))
+      .catchNonFatal(LocalDateTime.parse(input.trim, DateTimeFormatter.ofPattern(PublishedPromptPattern)))
       .leftMap { _ =>
-        s"$trimmedInput does not match the required format $PublishedPromptPattern."
+        s"${input.trim} does not match the required format $PublishedPromptPattern."
       }
   }
 
@@ -190,6 +204,16 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
         s"$likes should be more or equals to zero."
       }
   }
+
+  def nonEmptyCheck(s: String)(fieldName: String): Either[String, String] =
+    Either
+      .catchNonFatal{
+        require(!s.isEmpty)
+        s
+      }
+      .leftMap { _ =>
+        s"input $fieldName can not be empty or contains only spaces"
+      }
 
   private def withReadOne(id: PostId)(onFound: Post.Existing[PostId] => F[Response[F]]): F[Response[F]] =
     service
