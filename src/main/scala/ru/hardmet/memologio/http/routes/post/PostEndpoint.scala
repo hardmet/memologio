@@ -14,7 +14,9 @@ import domain.posts.Post
 import io.circe.syntax._
 import org.http4s._
 import org.http4s.circe._
+import org.http4s.headers.Location
 import services.PostService
+import PostEndpoint._
 
 import scala.util.chaining.scalaUtilChainingOps
 
@@ -22,20 +24,21 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
                                       (implicit parse: Parse[String, PostId])
   extends Endpoint[F] {
 
+  //format:off
   override def routMapper: PartialFunction[Request[F], F[Response[F]]] = {
-    case r @ POST -> Root =>
-      r.as[request.Post.Create].flatMap(create)
+    case r @ POST -> Root                    => r.as[request.Post.Create].flatMap(create)
 
-    case r @ PUT -> Root / id =>
-      r.as[request.Post.Update].flatMap(update(id))
+    case r @ PUT -> Root / id                => r.as[request.Post.Update].flatMap(update(id))
 
     case GET -> Root :? Published(published) => searchByPublished(published)
-    case GET -> Root                   => showAll
-    case GET -> Root / id              => searchById(id)
+    case r @ GET -> Root if r.params.isEmpty => showAll
+    case _ @ GET -> Root                     => Status.PermanentRedirect.apply(BaseURI)
+    case GET -> Root / id                    => searchById(id)
 
-    case DELETE -> Root      => deleteAll
-    case DELETE -> Root / id => delete(id)
+    case DELETE -> Root                      => deleteAll()
+    case DELETE -> Root / id                 => delete(id)
   }
+  //format:on
 
   object Published extends QueryParamDecoderMatcher[String]("published")
 
@@ -120,7 +123,7 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
         .flatMap(Ok(_))
     }
 
-  private val showAll: F[Response[F]] =
+  private def showAll(): F[Response[F]] =
     service.readAll.flatMap { posts =>
       posts
         .sortBy(_.published)
@@ -248,7 +251,11 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
 
   private val displayNoPostsFoundMessage: F[Response[F]] = Ok("No posts found!")
 
-  private val deleteAll: F[Response[F]] = service.deleteAll >> NoContent()
+  private def deleteAll(): F[Response[F]] = service.deleteAll >> NoContent()
+}
+
+object PostEndpoint {
+  private val BaseURI: Location = Location(Uri.unsafeFromString("http://localhost:8888/api/posts"))
 
   private val PublishedDateTimePromptFormatter: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
 
