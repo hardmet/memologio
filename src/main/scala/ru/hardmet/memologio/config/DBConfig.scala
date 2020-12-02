@@ -10,5 +10,6 @@ case class DBConfig(
                      port: Int,
                      database: String,
                      user: String,
-                     password: String
+                     password: String,
+                     poolSize: Int
                    )

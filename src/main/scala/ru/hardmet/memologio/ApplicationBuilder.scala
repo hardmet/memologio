@@ -8,7 +8,8 @@ import ru.hardmet.memologio.config.{AppConfig, ServerConfig}
 import ru.hardmet.memologio.http.routes.Router
 import ru.hardmet.memologio.http.routes.post.PostRouter
 import ru.hardmet.memologio.http.server.HttpServer
-import ru.hardmet.memologio.repository.{DBConnector, SkunkConnector}
+import ru.hardmet.memologio.repository.skunk_interpreter.SkunkConnector
+import ru.hardmet.memologio.repository.DBConnector
 import ru.hardmet.memologio.services.{PostService, PostServiceImpl}
 
 import scala.concurrent.ExecutionContext
