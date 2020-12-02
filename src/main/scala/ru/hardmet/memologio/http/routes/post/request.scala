@@ -30,10 +30,10 @@ object request {
                         ifAllFields: (String, String, Int) => B): B = {
         //format:off
         this match {
-          case Update.URL(url) =>                  ifURL(url)
-          case Published(published) =>             ifPublished(published)
+          case Update.URL(url) =>                  ifURL(url.trim)
+          case Published(published) =>             ifPublished(published.trim)
           case Likes(likes) =>                     ifLikes(likes)
-          case AllFields(url, published, likes) => ifAllFields(url, published, likes)
+          case AllFields(url, published, likes) => ifAllFields(url.trim, published.trim, likes)
         }
         //format:on
       }

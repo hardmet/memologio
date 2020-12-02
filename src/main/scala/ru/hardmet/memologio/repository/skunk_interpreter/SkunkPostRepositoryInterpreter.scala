@@ -121,12 +121,12 @@ object PostStatements {
 
   val UrlCodec: Codec[String] = varchar(512)
 
-  final implicit private class TodoDataCompanionOps(private val data: Post.Data.type) {
+  final implicit private class PostDataCompanionOps(private val data: Post.Data.type) {
     val codec: Codec[Post.Data] =
       (UrlCodec ~ timestamp ~ int4).gimap[Post.Data]
   }
 
-  final implicit private class TodoExistingCompanionOps(private val existing: Post.Existing.type) {
+  final implicit private class PostExistingCompanionOps(private val existing: Post.Existing.type) {
     val codec: Codec[Post.Existing[UUID]] =
       (uuid ~ Post.Data.codec).gimap[Post.Existing[UUID]]
   }
@@ -193,14 +193,14 @@ object PostStatements {
     val byPublishedDate: Query[LocalDate, Post.Existing[UUID]] =
       sql"""
             SELECT *
-              FROM todo
+              FROM post
              WHERE published::date = $date
          """.query(Post.Existing.codec)
 
     val byPublishedDateTime: Query[LocalDateTime, Post.Existing[UUID]] =
       sql"""
             SELECT *
-              FROM todo
+              FROM post
              WHERE published = $timestamp
          """.query(Post.Existing.codec)
 
@@ -241,7 +241,6 @@ object PostStatements {
              WHERE id = $uuid
          """.command
 
-    // TODO use or remove
     def many(size: Int): Command[List[UUID]] =
       sql"""
             DELETE

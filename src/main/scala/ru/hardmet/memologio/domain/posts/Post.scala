@@ -5,13 +5,6 @@ package posts
 import java.time.LocalDateTime
 import java.util.UUID
 
-//import derevo.circe.codec
-//import derevo.derive
-//import ru.tinkoff.tschema.param.HttpParam
-//import ru.tinkoff.tschema.swagger.{AsOpenApiParam, Swagger}
-//import tofu.logging.derivation.loggable
-
-
 sealed abstract class Post[+PostId] extends Product with Serializable {
   protected type ThisType <: Post[PostId]
 
@@ -30,7 +23,6 @@ sealed abstract class Post[+PostId] extends Product with Serializable {
 
 object Post {
 
-//  @derive(codec, Swagger, loggable) TODO fix deriving
   final case class Existing[PostId](id: PostId, data: Data)
     extends Post[PostId] {
     override protected type ThisType = Existing[PostId]
@@ -50,7 +42,6 @@ object Post {
       copy(data = data.withUpdatedLikes(newLikes))
   }
 
-//  @derive(codec, Swagger, config, loggable) TODO fix deriving
   final case class Data(url: String, published: LocalDateTime, likes: Int = 0) extends Post[Nothing] {
     override protected type ThisType = Data
 
@@ -62,5 +53,4 @@ object Post {
   }
 }
 
-//@derive(codec, Swagger, loggable, HttpParam, AsOpenApiParam)
 final case class PostId(uuid: UUID)

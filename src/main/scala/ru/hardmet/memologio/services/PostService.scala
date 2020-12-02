@@ -1,7 +1,7 @@
 package ru.hardmet.memologio
 package services
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 
 import ru.hardmet.memologio.domain.posts.Post
 
@@ -12,7 +12,8 @@ trait PostService[F[_], PostId] extends Service[F] {
 
   def readOneById(id: PostId): F[Option[Post.Existing[PostId]]]
   def readManyById(ids: Vector[PostId]): F[Vector[Post.Existing[PostId]]]
-  def readManyByPublishedDate(publishedDate: LocalDate): F[Vector[Post.Existing[PostId]]]
+  def readManyByPublishedDate(published: LocalDate): F[Vector[Post.Existing[PostId]]]
+  def readManyByPublishedDateTime(published: LocalDateTime): F[Vector[Post.Existing[PostId]]]
   def readAll: F[Vector[Post.Existing[PostId]]]
 
   def updateOne(post: Post.Existing[PostId]): F[Post.Existing[PostId]]

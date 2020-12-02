@@ -2,7 +2,7 @@ package ru.hardmet.memologio
 
 import scala.concurrent.ExecutionContext
 
-object Memologio extends App {
+object MemologioApp extends App {
 
     import cats.effect._
     val executionContext: ExecutionContext = ExecutionContext.global
@@ -10,5 +10,3 @@ object Memologio extends App {
     implicit val timer: Timer[IO] = IO.timer(executionContext)
     new ApplicationBuilderBase[IO](executionContext).create.unsafeRunSync()
 }
-
-class MemologioError(message: String) extends RuntimeException(message, null, false, false) // TODO use or delete

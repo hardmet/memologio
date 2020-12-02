@@ -1,7 +1,7 @@
 package ru.hardmet.memologio
 package services
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 
 import cats.Applicative
 import cats.implicits.toTraverseOps
@@ -27,11 +27,13 @@ class PostServiceImpl[F[_]: Applicative, PostId](postRepository: PostRepository[
   override def readManyByPublishedDate(published: LocalDate): F[Vector[Post.Existing[PostId]]] =
     postRepository.findByPublishedDate(published)
 
+  override def readManyByPublishedDateTime(published: LocalDateTime): F[Vector[Post.Existing[PostId]]] =
+    postRepository.findByPublishedDateTime(published)
+
   override def readAll: F[Vector[Post.Existing[PostId]]] = postRepository.listAll()
 
   override def updateOne(post: Post.Existing[PostId]): F[Post.Existing[PostId]] = postRepository.update(post)
 
-  // todo optimize delegation to update one by one
   override def updateMany(posts: Vector[Post.Existing[PostId]]): F[Vector[Post.Existing[PostId]]] = writeMany(posts)
 
   override def deleteOne(post: Post.Existing[PostId]): F[Unit] = postRepository.delete(post.id)

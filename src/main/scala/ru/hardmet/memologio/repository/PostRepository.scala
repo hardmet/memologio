@@ -27,7 +27,6 @@ trait PostRepository[F[_], PostId] {
 
   def listAll(): F[Vector[Post.Existing[PostId]]]
 
-  // TODO get rid from F[Unit]
   def delete(id: PostId): F[Unit]
   def deleteMany(posts: Vector[Post.Existing[PostId]]): F[Unit]
   def deleteAll(): F[Unit]
