@@ -172,7 +172,7 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
   private def toId(userInput: String): Either[String, PostId] =
     nonEmptyCheck(userInput)("uuid")
       .flatMap { nonEmptyInput =>
-        parse(nonEmptyInput).leftMap(_.getMessage)
+        parse(nonEmptyInput)
       }
 
   private def withURLPrompt(url: String)(onSuccess: String => F[Response[F]]): F[Response[F]] = {
