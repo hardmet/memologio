@@ -31,7 +31,7 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
     case r @ PUT -> Root / id                => r.as[request.Post.Update].flatMap(update(id))
 
     case GET -> Root :? Published(published) => searchByPublished(published)
-    case r @ GET -> Root if r.params.isEmpty => showAll
+    case r @ GET -> Root if r.params.isEmpty => showAll()
     case _ @ GET -> Root                     => Status.PermanentRedirect.apply(BaseURI)
     case GET -> Root / id                    => searchById(id)
 
@@ -181,12 +181,10 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
 
   def parseURL(url: String): Either[String, String] =
     nonEmptyCheck(url)("url").flatMap { url =>
-      Either
-        .catchNonFatal {
-          URI.create(url)
-          url
-        }
-        .leftMap(_ => s"$url does not match the URI format.")
+      eitherCatchNFAndLeftMap{
+        URI.create(url)
+        url
+      }(_ => s"$url does not match the URI format.")
     }
 
   private def withPublishedPrompt(published: String)
@@ -209,40 +207,23 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
     parseLikes(likes).fold(BadRequest(_), onSuccess)
 
   private def toLocalDateTime(input: String): Either[String, LocalDateTime] =
-    Either
-      .catchNonFatal(LocalDateTime.parse(input, PublishedDateTimePromptFormatter))
-      .leftMap { _ =>
-        s"$input does not match the required format 'yyyy-MM-ddTHH:mm'."
-      }
+    eitherCatchNFAndLeftMap(LocalDateTime.parse(input, PublishedDateTimePromptFormatter))(
+      _ => s"$input does not match the required format 'yyyy-MM-ddTHH:mm'"
+    )
 
-  private def toLocalDate(input: String)(errorMessage: String = ""): Either[String, LocalDate] = {
-    Either
-      .catchNonFatal(LocalDate.parse(input, DateTimeFormatter.ofPattern(PublishedDatePromptPattern)))
-      .leftMap { _ =>
-        s"$errorMessage date: $input does not match the required format $PublishedDatePromptPattern."
-      }
-  }
+  private def toLocalDate(input: String)(errorMessage: String = ""): Either[String, LocalDate] =
+    eitherCatchNFAndLeftMap(LocalDate.parse(input, DateTimeFormatter.ofPattern(PublishedDatePromptPattern)))(
+      _ => s"$errorMessage date: $input does not match the required format $PublishedDatePromptPattern"
+    )
 
-  private def parseLikes(likes: Int): Either[String, Int] = {
-    Either
-      .catchNonFatal{
-        require(likes >= 0)
-        likes
-      }
-      .leftMap { _ =>
-        s"likes value: $likes should be more or equals to zero."
-      }
-  }
+  private def parseLikes(likes: Int): Either[String, Int] =
+    Right(likes)
+      .filterOrElse(_ >= 0, s"likes value: $likes should be more or equals to zero")
 
   def nonEmptyCheck(s: String)(fieldName: String): Either[String, String] =
-    Either
-      .catchNonFatal{
-        require(!s.isEmpty)
-        s
-      }
-      .leftMap { _ =>
-        s"input $fieldName can not be empty or contains only spaces"
-      }
+    Option(s)
+      .toRight(s"input $fieldName can not be null")
+      .filterOrElse(_.isEmpty, s"input $fieldName can not be empty or contains only spaces")
 
   private def withReadOne(id: PostId)(onFound: Post.Existing[PostId] => F[Response[F]]): F[Response[F]] =
     service
@@ -252,6 +233,11 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
   private val displayNoPostsFoundMessage: F[Response[F]] = Ok("No posts found!")
 
   private def deleteAll(): F[Response[F]] = service.deleteAll >> NoContent()
+
+  private def eitherCatchNFAndLeftMap[T](blockCanThrows: => T)(handleError: Throwable => String): Either[String, T] =
+    Either
+      .catchNonFatal(blockCanThrows)
+      .leftMap(handleError)
 }
 
 object PostEndpoint {
@@ -261,5 +247,3 @@ object PostEndpoint {
 
   private val PublishedDatePromptPattern: String = "yyyy-MM-dd"
 }
-
-
