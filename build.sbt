@@ -28,6 +28,7 @@ val pureconfigVersion = "0.12.3"
 val doobieVersion     = "0.8.8"
 val skunkVersion      = "0.0.21"
 val logbackVersion    = "1.2.3"
+val tofuVersion       = "0.7.4"
 
 
 addCompilerPlugin("com.olegpy"     %% "better-monadic-for" % "0.3.1")
@@ -66,6 +67,7 @@ libraryDependencies += "org.tpolecat"               %% "doobie-postgres"      % 
 libraryDependencies += "org.tpolecat"               %% "skunk-core"           % skunkVersion
 libraryDependencies += "ch.qos.logback"             % "logback-classic"       % logbackVersion
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging"        % "3.9.2"
+libraryDependencies += "ru.tinkoff"                 %% "tofu-logging"         % tofuVersion
 
 libraryDependencies += "org.scalactic"              %% "scalactic"            % "3.0.8"
 libraryDependencies += "org.scalatest"              %% "scalatest"            % "3.0.8" % "it,test"
