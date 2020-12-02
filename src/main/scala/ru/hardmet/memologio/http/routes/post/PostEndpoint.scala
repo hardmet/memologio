@@ -209,7 +209,7 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
     Either
       .catchNonFatal(LocalDateTime.parse(input, PublishedDateTimePromptFormatter))
       .leftMap { _ =>
-        s"$input does not match the required format ${PublishedDateTimePromptFormatter.toString}."
+        s"$input does not match the required format 'yyyy-MM-ddTHH:mm'."
       }
 
   private def toLocalDate(input: String)(errorMessage: String = ""): Either[String, LocalDate] = {
