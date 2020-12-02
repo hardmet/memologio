@@ -23,8 +23,7 @@ sealed abstract class Post[+PostId] extends Product with Serializable {
 
 object Post {
 
-  final case class Existing[PostId](id: PostId, data: Data)
-    extends Post[PostId] {
+  final case class Existing[PostId](id: PostId, data: Data) extends Post[PostId] {
     override protected type ThisType = Existing[PostId]
 
     override def url: String = data.url
@@ -38,8 +37,7 @@ object Post {
 
     override def likes: Int = data.likes
 
-    override def withUpdatedLikes(newLikes: Int): ThisType =
-      copy(data = data.withUpdatedLikes(newLikes))
+    override def withUpdatedLikes(newLikes: Int): ThisType = copy(data = data.withUpdatedLikes(newLikes))
   }
 
   final case class Data(url: String, published: LocalDateTime, likes: Int = 0) extends Post[Nothing] {
