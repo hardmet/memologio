@@ -16,18 +16,8 @@ import ru.hardmet.memologio.repository.skunk_interpreter.SkunkPostRepositoryInte
 class SkunkPostRepositoryInterpreter[F[_]: Sync](val sessionResource: Resource[F, skunk.Session[F]]) extends PostRepository[F, UUID] {
   import PostStatements._
 
-  override def create(post: Post[UUID]): F[Post.Existing[UUID]] =
-    post match {
-      case p: Post.Existing[UUID] => Bracket[F, Throwable].raiseError(
-        new RuntimeException(
-          s"Failed to create post: ${p.id} because it is already exist."
-        )
-      )
-      case p: Post.Data => insertOne(p)
-    }
-
-  private def insertOne(data: Post.Data): F[Post.Existing[UUID]] =
-    prepareAndQuery(Insert.one, data)
+  override def create(post: Post.Data): F[Post.Existing[UUID]] =
+    prepareAndQuery(Insert.one, post)
 
   override def update(post: Post.Existing[UUID]): F[Post.Existing[UUID]] =
     prepareAndQuery(Update.one, post)
@@ -139,27 +129,13 @@ object PostStatements {
             RETURNING *
          """.query(Post.Existing.codec)
 
-    // TODO use or remove next three
+    // TODO use or remove
     def many(size: Int): Query[List[Post.Data], Post.Existing[UUID]] =
       sql"""
                INSERT INTO post (url, published, likes)
                VALUES (${Post.Data.codec.list(size)})
             RETURNING *
          """.query(Post.Existing.codec)
-
-    object WithUUID {
-      val one: Command[Post.Existing[UUID]] =
-        sql"""
-              INSERT INTO post
-              VALUES (${Post.Existing.codec})
-           """.command
-
-      def many(size: Int): Command[List[Post.Existing[UUID]]] =
-        sql"""
-              INSERT INTO post
-              VALUES (${Post.Existing.codec.list(size)})
-           """.command
-    }
   }
 
   object Select {
@@ -204,6 +180,7 @@ object PostStatements {
              WHERE published = $timestamp
          """.query(Post.Existing.codec)
 
+    // TODO write route for this functionality
     val withLikesAbove: Query[Int, Post.Existing[UUID]] =
       sql"""
             SELECT *

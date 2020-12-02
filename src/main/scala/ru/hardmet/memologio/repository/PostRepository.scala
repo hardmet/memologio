@@ -7,7 +7,7 @@ import ru.hardmet.memologio.domain.posts.Post
 
 trait PostRepository[F[_], PostId] {
 
-  def create(post: Post[PostId]): F[Post.Existing[PostId]]
+  def create(post: Post.Data): F[Post.Existing[PostId]]
 
   def update(post: Post.Existing[PostId]): F[Post.Existing[PostId]]
 

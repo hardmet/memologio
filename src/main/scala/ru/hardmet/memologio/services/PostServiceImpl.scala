@@ -22,7 +22,7 @@ class PostServiceImpl[F[_]: Applicative, PostId](postRepository: PostRepository[
 
   override def readOneById(id: PostId): F[Option[Post.Existing[PostId]]] = postRepository.get(id)
 
-  override def readManyById(ids: Vector[PostId]): F[Vector[Post.Existing[PostId]]] = postRepository.getListByIds(ids)
+  override def readManyByIds(ids: Vector[PostId]): F[Vector[Post.Existing[PostId]]] = postRepository.getListByIds(ids)
 
   override def readManyByPublishedDate(published: LocalDate): F[Vector[Post.Existing[PostId]]] =
     postRepository.findByPublishedDate(published)
