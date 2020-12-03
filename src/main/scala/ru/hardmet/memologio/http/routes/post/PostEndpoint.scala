@@ -201,7 +201,10 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
 
   private def withPublishedDateTimePrompt(published: String)
                                          (onSuccess: LocalDateTime => F[Response[F]]): F[Response[F]] =
-    toLocalDateTime(published).fold(BadRequest(_), onSuccess)
+    nonEmptyCheck(published)("published").fold(
+      BadRequest(_),
+      published => toLocalDateTime(published).fold(BadRequest(_), onSuccess)
+    )
 
   private def withLikesPrompt(likes: Int)(onSuccess: Int => F[Response[F]]): F[Response[F]] =
     parseLikes(likes).fold(BadRequest(_), onSuccess)
@@ -223,7 +226,7 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
   def nonEmptyCheck(s: String)(fieldName: String): Either[String, String] =
     Option(s)
       .toRight(s"input $fieldName can not be null")
-      .filterOrElse(_.isEmpty, s"input $fieldName can not be empty or contains only spaces")
+      .filterOrElse(!_.isEmpty, s"input $fieldName can not be empty or contains only spaces")
 
   private def withReadOne(id: PostId)(onFound: Post.Existing[PostId] => F[Response[F]]): F[Response[F]] =
     service
