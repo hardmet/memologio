@@ -8,8 +8,8 @@ import ru.hardmet.memologio.config.{AppConfig, ServerConfig}
 import ru.hardmet.memologio.http.routes.Router
 import ru.hardmet.memologio.http.routes.post.PostRouter
 import ru.hardmet.memologio.http.server.HttpServer
-import ru.hardmet.memologio.repository.skunk_interpreter.SkunkConnector
 import ru.hardmet.memologio.repository.DBConnector
+import ru.hardmet.memologio.repository.doobie.DoobieConnector
 import ru.hardmet.memologio.services.{PostService, PostServiceImpl}
 
 import scala.concurrent.ExecutionContext
@@ -33,7 +33,7 @@ trait ApplicationBuilder[F[_], PostId] {
 
 class ApplicationBuilderBase[F[_] : ConcurrentEffect : ContextShift : Timer](val executionContext: ExecutionContext) extends ApplicationBuilder[F, UUID] {
   override val configReader: F[AppConfig] = AppConfig.init[F]
-  override val dbConnector: DBConnector[F, UUID] = new SkunkConnector[F]()
+  override val dbConnector: DBConnector[F, UUID] = new DoobieConnector[F]()
 
   override def router(postService: PostService[F, UUID]): PostRouter[F, UUID] = new PostRouter(postService)
 
