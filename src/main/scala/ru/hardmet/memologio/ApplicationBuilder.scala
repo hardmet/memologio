@@ -2,15 +2,18 @@ package ru.hardmet.memologio
 
 import java.util.UUID
 
+import cats.implicits._
 import cats.effect.{ConcurrentEffect, ContextShift, Resource, Timer}
 import natchez.Trace.Implicits.noop
-import ru.hardmet.memologio.config.{AppConfig, ServerConfig}
-import ru.hardmet.memologio.http.routes.Router
-import ru.hardmet.memologio.http.routes.post.PostRouter
-import ru.hardmet.memologio.http.server.HttpServer
-import ru.hardmet.memologio.repository.DBConnector
-import ru.hardmet.memologio.repository.doobie.DoobieConnector
-import ru.hardmet.memologio.services.{PostService, PostServiceImpl}
+import config.{AppConfig, ServerConfig}
+
+import http.routes.Router
+import http.routes.post.PostRouter
+import http.server.HttpServer
+import logging_infrastructure.ContextLogging
+import repository.DBConnector
+import repository.doobie.DoobieConnector
+import services.{PostService, PostServiceImpl}
 
 import scala.concurrent.ExecutionContext
 
@@ -46,8 +49,10 @@ class ApplicationBuilderBase[F[_] : ConcurrentEffect : ContextShift : Timer](val
     (for {
       config <- Resource.liftF(configReader)
       repository <- dbConnector.connectToRepository(config.db)
-      postService = new PostServiceImpl(repository)
+      logger <- Resource.liftF(new ContextLogging[F].loggerForService[PostService[F, UUID]])
+      postService = PostServiceImpl.apply(repository)(logger)
       r = router(postService)
       server <- Resource.liftF[F, HttpServer[F]](httpServer(executionContext)(config.server)(Seq(r)))
-    } yield server).use(server => server.serve)
+    } yield server)
+      .use(server => server.serve)
 }

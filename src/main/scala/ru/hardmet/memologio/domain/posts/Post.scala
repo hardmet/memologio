@@ -5,6 +5,9 @@ package posts
 import java.time.LocalDateTime
 import java.util.UUID
 
+import derevo.derive
+import tofu.logging.derivation.loggable
+
 sealed abstract class Post[+PostId] extends Product with Serializable {
   protected type ThisType <: Post[PostId]
 
@@ -23,6 +26,7 @@ sealed abstract class Post[+PostId] extends Product with Serializable {
 
 object Post {
 
+  @derive(loggable)
   final case class Existing[PostId](id: PostId, data: Data) extends Post[PostId] {
     override protected type ThisType = Existing[PostId]
 
@@ -40,6 +44,7 @@ object Post {
     override def withUpdatedLikes(newLikes: Int): ThisType = copy(data = data.withUpdatedLikes(newLikes))
   }
 
+  @derive(loggable)
   final case class Data(url: String, published: LocalDateTime, likes: Int = 0) extends Post[Nothing] {
     override protected type ThisType = Data
 

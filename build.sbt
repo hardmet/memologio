@@ -16,7 +16,8 @@ scalacOptions := List(
   "-language:_",
   "-Ymacro-annotations"
 )
-// TODO: clean dependencies
+bloopExportJarClassifiers in Global := Some(Set("sources"))
+
 val circeVersion      = "0.12.1"
 val circeDerVersion   = "0.12.0-M7"
 val catsVersion       = "2.0.0"
