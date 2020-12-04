@@ -21,8 +21,7 @@ import PostEndpoint._
 import scala.util.chaining.scalaUtilChainingOps
 
 class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, PostId], responsePattern: DateTimeFormatter)
-                                      (implicit parse: Parse[String, PostId])
-  extends Endpoint[F] {
+                                      (implicit parse: Parse[String, PostId]) extends Endpoint[F] {
 
   //format:off
   override def routMapper: PartialFunction[Request[F], F[Response[F]]] = {
@@ -43,17 +42,23 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
   object Published extends QueryParamDecoderMatcher[String]("published")
 
   private def create(payload: request.Post.Create): F[Response[F]] =
-    withPublishedDateTimePrompt(payload.published.trim) { published =>
-      withURLPrompt(payload.url.trim) { url =>
-        withLikesPrompt(payload.likes) { likes =>
-          service
-            .createOne(Post.Data(url, published, likes))
-            .map(response.Post(responsePattern))
-            .map(_.asJson)
-            .flatMap(Created(_))
-        }
-      }
-    }
+    (
+      parseURL(payload.url.trim).toEitherNec,
+      nonEmptyCheck(payload.published.trim)("published").flatMap(toLocalDateTime).toEitherNec,
+      parseLikes(payload.likes).toEitherNec
+      )
+      .parTupled
+      .fold(
+        _.asJson.pipe(BadRequest(_)),
+        Function.tupled(createCheckedPost)
+      )
+
+  private def createCheckedPost(url: String, published: LocalDateTime, likes: Int): F[Response[F]] =
+    service
+      .createOne(Post.Data(url, published, likes))
+      .map(response.Post(responsePattern))
+      .map(_.asJson)
+      .flatMap(Created(_))
 
 
   private def update(id: String)(update: request.Post.Update): F[Response[F]] =
