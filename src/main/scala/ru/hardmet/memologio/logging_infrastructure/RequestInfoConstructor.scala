@@ -38,6 +38,6 @@ class RequestInfoBuilder[F[_]: GenUUID: FlatMap: Clock] extends RequestInfoConst
   }
 }
 
-object RequestInfoBuilder {
+object RequestInfoConstructor {
   def apply[F[_] : GenUUID : FlatMap : Clock](): RequestInfoBuilder[F] = new RequestInfoBuilder()
 }

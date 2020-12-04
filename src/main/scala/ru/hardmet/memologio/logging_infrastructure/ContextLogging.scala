@@ -16,7 +16,7 @@ class ContextLogging[F[_]: GenUUID: Sync: Clock] {
 
     override implicit def loggable: Loggable[RequestInfo] = generate[RequestInfo]
 
-    override implicit def context: HasContext[F, RequestInfo] = RequestInfoBuilder[F]().initContext
+    override implicit def context: HasContext[F, RequestInfo] = RequestInfoConstructor[F]().initContext
   }
 
   def loggerForService[A: ClassTag]: F[Logging[F]] = Logs.withContext[F, F].forService[A]
