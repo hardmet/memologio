@@ -4,10 +4,11 @@ package routes
 package post
 
 import java.net.URI
-import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 
+import util.Validator.nonEmptyCheck
+import util.{DateParser, Parse}
 import cats.effect.Sync
 import cats.syntax.all._
 import domain.posts.Post
@@ -19,9 +20,14 @@ import services.PostService
 import PostEndpoint._
 
 import scala.util.chaining.scalaUtilChainingOps
+import scala.util.control.NonFatal
 
 class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, PostId], responsePattern: DateTimeFormatter)
-                                      (implicit parse: Parse[String, PostId]) extends Endpoint[F] {
+                                      (implicit parse: Parse[String, PostId],
+                                       localDateTimeParser: Parse[String, LocalDateTime]) extends Endpoint[F] {
+
+  import PostEndpoint.{PublishedDatePattern, PublishedDateTimePattern}
+  val dateParser: DateParser = DateParser(PublishedDatePattern, PublishedDateTimePattern)
 
   //format:off
   override def routMapper: PartialFunction[Request[F], F[Response[F]]] = {
@@ -43,8 +49,8 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
 
   private def create(payload: request.Post.Create): F[Response[F]] =
     (
-      parseURL(payload.url.trim).toEitherNec,
-      nonEmptyCheck(payload.published.trim)("published").flatMap(toLocalDateTime).toEitherNec,
+      validateURL(payload.url.trim).toEitherNec,
+      nonEmptyCheck(payload.published.trim)("published").flatMap(localDateTimeParser).toEitherNec,
       parseLikes(payload.likes).toEitherNec
       )
       .parTupled
@@ -104,8 +110,8 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
   private def updateAllFields(id: String)(url: String, published: String, likes: Int): F[Response[F]] =
     (
       toId(id.trim).toEitherNec,
-      parseURL(url.trim).toEitherNec,
-      nonEmptyCheck(published.trim)("published").flatMap(toLocalDateTime).toEitherNec,
+      validateURL(url.trim).toEitherNec,
+      nonEmptyCheck(published.trim)("published").flatMap(localDateTimeParser).toEitherNec,
       parseLikes(likes).toEitherNec
       )
       .parTupled
@@ -148,20 +154,33 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
       }
     }
 
-  private def searchByPublished(published: String): F[Response[F]] =
-    withPublishedPrompt(published.trim)(
-      published => responsePosts(service.readManyByPublishedDate(published)),
-      published => responsePosts(service.readManyByPublishedDateTime(published))
-    )
+  private def searchByPublished(published: String): F[Response[F]] = {
+    parsePublished(published.trim)
+      .fold(
+        error => BadRequest(error),
+        dateOrDateTime =>
+          dateOrDateTime.fold(
+            service.readManyByPublishedDate,
+            service.readManyByPublishedDateTime
+          ).flatMap{ posts =>
+            posts
+              .map(response.Post(responsePattern))
+              .asJson
+              .pipe(Ok(_))
+          }
+      )
+  }
 
-  private def responsePosts(getPostsFunc: => F[Vector[Post.Existing[PostId]]]): F[Response[F]] =
-    getPostsFunc
-      .flatMap { posts =>
-        posts
-          .map(response.Post(responsePattern))
-          .asJson
-          .pipe(Ok(_))
-      }
+  private def parsePublished(published: String): Either[String, Either[LocalDate, LocalDateTime]] =
+    nonEmptyCheck(published)("published").flatMap(parseNonEmptyDate)
+
+  private def  parseNonEmptyDate(nonEmptyDate: String): Either[String, Either[LocalDate, LocalDateTime]] =
+    dateParser.parseLocalDateTime(nonEmptyDate)
+      .map(Right.apply)
+      .leftFlatMap(dateTimeParsingError =>
+        dateParser.parseLocalDate(nonEmptyDate)(dateTimeParsingError)
+          .map(localDate => Left(localDate))
+      )
 
   private def delete(id: String): F[Response[F]] =
     withIdPrompt(id) { id =>
@@ -180,11 +199,7 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
         parse(nonEmptyInput)
       }
 
-  private def withURLPrompt(url: String)(onSuccess: String => F[Response[F]]): F[Response[F]] = {
-    parseURL(url).fold(BadRequest(_), onSuccess)
-  }
-
-  def parseURL(url: String): Either[String, String] =
+  def validateURL(url: String): Either[String, String] =
     nonEmptyCheck(url)("url").flatMap { url =>
       eitherCatchNFAndLeftMap{
         URI.create(url)
@@ -192,46 +207,19 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
       }(_ => s"$url does not match the URI format.")
     }
 
-  private def withPublishedPrompt(published: String)
-                                 (ifLocalDate: LocalDate => F[Response[F]],
-                                  ifLocalDateTime: LocalDateTime => F[Response[F]]): F[Response[F]] =
-    nonEmptyCheck(published)("published").fold(BadRequest(_), published =>
-      toLocalDateTime(published).fold(
-        dateParseError =>
-          toLocalDate(published)(s"$dateParseError or does not match the required format $PublishedDatePromptPattern.")
-            .fold(BadRequest(_), ifLocalDate),
-        ifLocalDateTime
-      )
-    )
-
   private def withPublishedDateTimePrompt(published: String)
                                          (onSuccess: LocalDateTime => F[Response[F]]): F[Response[F]] =
     nonEmptyCheck(published)("published").fold(
       BadRequest(_),
-      published => toLocalDateTime(published).fold(BadRequest(_), onSuccess)
+      published => localDateTimeParser(published).fold(BadRequest(_), onSuccess)
     )
 
   private def withLikesPrompt(likes: Int)(onSuccess: Int => F[Response[F]]): F[Response[F]] =
     parseLikes(likes).fold(BadRequest(_), onSuccess)
 
-  private def toLocalDateTime(input: String): Either[String, LocalDateTime] =
-    eitherCatchNFAndLeftMap(LocalDateTime.parse(input, PublishedDateTimePromptFormatter))(
-      _ => s"$input does not match the required format 'yyyy-MM-ddTHH:mm'"
-    )
-
-  private def toLocalDate(input: String)(errorMessage: String = ""): Either[String, LocalDate] =
-    eitherCatchNFAndLeftMap(LocalDate.parse(input, DateTimeFormatter.ofPattern(PublishedDatePromptPattern)))(
-      _ => s"$errorMessage date: $input does not match the required format $PublishedDatePromptPattern"
-    )
-
   private def parseLikes(likes: Int): Either[String, Int] =
     Right(likes)
       .filterOrElse(_ >= 0, s"likes value: $likes should be more or equals to zero")
-
-  def nonEmptyCheck(s: String)(fieldName: String): Either[String, String] =
-    Option(s)
-      .toRight(s"input $fieldName can not be null")
-      .filterOrElse(!_.isEmpty, s"input $fieldName can not be empty or contains only spaces")
 
   private def withReadOne(id: PostId)(onFound: Post.Existing[PostId] => F[Response[F]]): F[Response[F]] =
     service
@@ -249,9 +237,10 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
 }
 
 object PostEndpoint {
-  private val BaseURI: Location = Location(Uri.unsafeFromString("http://localhost:8888/api/posts"))
 
-  private val PublishedDateTimePromptFormatter: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
+  private val PublishedDatePattern: String = "yyyy-MM-dd"
 
-  private val PublishedDatePromptPattern: String = "yyyy-MM-dd"
+  private val PublishedDateTimePattern: String = "yyyy-MM-dd'T'HH:mm:ssZ"
+
+  private val BaseURI: Location = Location(Uri.unsafeFromString("http://localhost:8888/api/posts")) // TODO avoid full url
 }

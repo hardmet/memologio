@@ -5,13 +5,13 @@ import java.time.{LocalDate, LocalDateTime}
 
 import cats.Monad
 import cats.implicits._
-import ru.hardmet.memologio.domain.posts.Post
-import ru.hardmet.memologio.repository.PostRepository
+import domain.posts.Post
+import repository.PostRepository
 import tofu.logging.{Loggable, Logging}
 import tofu.syntax.logging.LoggingInterpolator
 
 class PostServiceImpl[F[_]: Monad: Logging, PostId](postRepository: PostRepository[F, PostId])
-                                                   (implicit val idLoggable: Loggable[PostId])
+                                                   (implicit idLoggable: Loggable[PostId])
   extends PostService[F, PostId] {
 
   override def createOne(post: Post.Data): F[Post.Existing[PostId]] =
@@ -54,7 +54,6 @@ class PostServiceImpl[F[_]: Monad: Logging, PostId](postRepository: PostReposito
       posts <- postRepository.findByPublishedDate(published)
       _ <- debug"posts: ${posts.map(_.data)} found"
     } yield posts
-
 
   override def readManyByPublishedDateTime(published: LocalDateTime): F[Vector[Post.Existing[PostId]]] =
     for {
@@ -107,7 +106,7 @@ class PostServiceImpl[F[_]: Monad: Logging, PostId](postRepository: PostReposito
 }
 
 object PostServiceImpl {
-  def apply[F[_] : Monad, PostId](postRepository: PostRepository[F, PostId])(log: Logging[F])
+  def apply[F[_]: Monad, PostId](postRepository: PostRepository[F, PostId])(log: Logging[F])
                                  (implicit idLoggable: Loggable[PostId]): PostServiceImpl[F, PostId] = {
     implicit val logging: Logging[F] = log
     new PostServiceImpl(postRepository)

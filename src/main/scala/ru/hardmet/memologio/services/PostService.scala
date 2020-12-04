@@ -13,7 +13,7 @@ trait PostService[F[_], PostId] extends Service[F] {
   def readOneById(id: PostId): F[Option[Post.Existing[PostId]]]
   // TODO write route pagination
   // TODO write route for queries with likes param: findWithLikesAbove
-  // TODO write route for it
+  // TODO write route for find by ids
   def readManyByIds(ids: Vector[PostId]): F[Vector[Post.Existing[PostId]]]
   def readManyByPublishedDate(published: LocalDate): F[Vector[Post.Existing[PostId]]]
   def readManyByPublishedDateTime(published: LocalDateTime): F[Vector[Post.Existing[PostId]]]
