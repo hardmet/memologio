@@ -4,13 +4,13 @@ import java.util.UUID
 
 import cats.implicits._
 import cats.effect.{ConcurrentEffect, ContextShift, Resource, Timer}
-import natchez.Trace.Implicits.noop
 import config.{AppConfig, ServerConfig}
+import infrastructure.http.HttpServer
 import infrastructure.http.routes.{Router, RouterInterpreter}
-import infrastructure.http.server.HttpServer
 import infrastructure.logging.ContextLogging
 import infrastructure.repository.DBConnector
 import infrastructure.repository.doobie.DoobieConnector
+import natchez.Trace.Implicits.noop
 import services.{PostService, PostServiceImpl}
 
 import scala.concurrent.ExecutionContext

@@ -1,7 +1,6 @@
 package ru.hardmet.memologio
 package infrastructure
 package http
-package server
 
 import cats.effect.{ConcurrentEffect, Timer}
 import cats.implicits.toSemigroupKOps
