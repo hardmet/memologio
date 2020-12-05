@@ -22,6 +22,9 @@ import services.PostService
 
 import scala.util.chaining.scalaUtilChainingOps
 
+// TODO write route pagination
+// TODO write route for queries with likes param: findWithLikesAbove
+// TODO write route for find by ids
 class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, PostId], responsePattern: DateTimeFormatter)
                                       (implicit parse: Parse[String, PostId],
                                        localDateTimeParser: Parse[String, LocalDateTime]) extends Endpoint[F] {
