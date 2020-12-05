@@ -1,12 +1,14 @@
 package ru.hardmet.memologio
-package repository
-package skunk_interpreter
+package infrastructure
+package repository.skunk
 
 import java.util.UUID
 
 import cats.effect.{Concurrent, ContextShift, Resource}
 import cats.implicits.catsSyntaxOptionId
-import ru.hardmet.memologio.config.DBConfig
+import config.DBConfig
+import repository.DBConnector
+import repository.PostRepository
 import skunk.Session
 
 class SkunkConnector[F[_]: Concurrent: ContextShift: natchez.Trace] extends DBConnector[F,  UUID] {

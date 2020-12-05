@@ -1,4 +1,5 @@
 package ru.hardmet.memologio
+package infrastructure
 package repository
 
 import java.time.{LocalDate, LocalDateTime}

@@ -1,4 +1,5 @@
 package ru.hardmet.memologio
+package infrastructure
 package http
 package server
 
@@ -9,7 +10,7 @@ import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 import org.http4s.{HttpApp, HttpRoutes}
-import ru.hardmet.memologio.config.ServerConfig
+import config.ServerConfig
 
 import scala.concurrent.ExecutionContext
 

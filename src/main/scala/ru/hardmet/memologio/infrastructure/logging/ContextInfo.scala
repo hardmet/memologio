@@ -1,5 +1,6 @@
 package ru.hardmet.memologio
-package domain
+package infrastructure
+package logging
 
 import java.time.Instant
 import java.util.UUID
@@ -7,6 +8,5 @@ import java.util.UUID
 import derevo.derive
 import tofu.logging.derivation.loggable
 
-
 @derive(loggable)
-case class RequestInfo(traceId: UUID, startTime: Instant)
+case class ContextInfo(traceId: UUID, startTime: Instant)

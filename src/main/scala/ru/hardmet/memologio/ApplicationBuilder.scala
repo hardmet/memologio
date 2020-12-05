@@ -7,12 +7,12 @@ import cats.effect.{ConcurrentEffect, ContextShift, Resource, Timer}
 import natchez.Trace.Implicits.noop
 import config.{AppConfig, ServerConfig}
 
-import http.routes.Router
-import http.routes.post.PostRouter
-import http.server.HttpServer
-import logging_infrastructure.ContextLogging
-import repository.DBConnector
-import repository.doobie.DoobieConnector
+import infrastructure.http.routes.Router
+import infrastructure.http.routes.post.PostRouter
+import infrastructure.http.server.HttpServer
+import infrastructure.logging.ContextLogging
+import infrastructure.repository.DBConnector
+import infrastructure.repository.doobie.DoobieConnector
 import services.{PostService, PostServiceImpl}
 
 import scala.concurrent.ExecutionContext

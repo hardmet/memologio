@@ -1,4 +1,5 @@
 package ru.hardmet.memologio
+package infrastructure
 package repository.doobie
 
 import java.time.{LocalDate, LocalDateTime}
@@ -6,6 +7,7 @@ import java.util.UUID
 
 import cats.data._
 import cats.implicits._
+import domain.posts.Post
 import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
@@ -13,8 +15,7 @@ import doobie.implicits.javatime.JavaTimeLocalDateMeta
 import doobie.implicits.javatime.JavaTimeLocalDateTimeMeta
 import doobie.util.update.Update
 import fs2.Stream
-import ru.hardmet.memologio.domain.posts.Post
-import ru.hardmet.memologio.repository.PostRepository
+import repository.PostRepository
 import DoobiePagination._
 import cats.effect.Bracket
 

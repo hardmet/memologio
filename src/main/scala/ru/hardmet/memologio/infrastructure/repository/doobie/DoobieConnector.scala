@@ -1,6 +1,6 @@
 package ru.hardmet.memologio
+package infrastructure
 package repository.doobie
-
 
 import java.util.UUID
 
@@ -9,8 +9,8 @@ import cats.syntax.all._
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
 import org.postgresql.ds.PGSimpleDataSource
-import ru.hardmet.memologio.config.DBConfig
-import ru.hardmet.memologio.repository.{DBConnector, PostRepository}
+import config.DBConfig
+import repository.{DBConnector, PostRepository}
 
 class DoobieConnector[F[_]: Concurrent: ContextShift: natchez.Trace] extends DBConnector[F,  UUID] {
   override def connectToRepository(config: DBConfig): Resource[F, PostRepository[F, UUID]] = {

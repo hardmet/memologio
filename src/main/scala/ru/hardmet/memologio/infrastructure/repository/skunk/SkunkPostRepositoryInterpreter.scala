@@ -1,17 +1,18 @@
 package ru.hardmet.memologio
-package repository
-package skunk_interpreter
+package infrastructure
+package repository.skunk
 
 import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
 
-import cats.effect.{Bracket, Resource, Sync}
+import cats.effect.{Resource, Sync}
 import cats.syntax.all._
+import repository.PostRepository
 import skunk.{Codec, Command, Fragment, Query, Void, ~}
 import skunk.codec.all._
 import skunk.implicits._
-import ru.hardmet.memologio.domain.posts.Post
-import ru.hardmet.memologio.repository.skunk_interpreter.SkunkPostRepositoryInterpreter.ChunkSizeInBytes
+import domain.posts.Post
+import SkunkPostRepositoryInterpreter.ChunkSizeInBytes
 
 class SkunkPostRepositoryInterpreter[F[_]: Sync](val sessionResource: Resource[F, skunk.Session[F]]) extends PostRepository[F, UUID] {
   import PostStatements._
@@ -104,7 +105,7 @@ class SkunkPostRepositoryInterpreter[F[_]: Sync](val sessionResource: Resource[F
 }
 
 object SkunkPostRepositoryInterpreter {
-  private [skunk_interpreter] val ChunkSizeInBytes: Int = 1024
+  private [skunk] val ChunkSizeInBytes: Int = 1024
 }
 
 object PostStatements {

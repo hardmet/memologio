@@ -1,5 +1,5 @@
 package ru.hardmet.memologio
-package util
+package services
 
 object Validator {
 

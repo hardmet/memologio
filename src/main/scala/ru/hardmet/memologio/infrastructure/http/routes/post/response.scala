@@ -1,4 +1,5 @@
 package ru.hardmet.memologio
+package infrastructure
 package http
 package routes
 package post

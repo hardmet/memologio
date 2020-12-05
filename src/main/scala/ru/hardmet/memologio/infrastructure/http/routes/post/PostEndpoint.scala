@@ -1,4 +1,5 @@
 package ru.hardmet.memologio
+package infrastructure
 package http
 package routes
 package post
@@ -7,7 +8,7 @@ import java.net.URI
 import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 
-import util.Validator.nonEmptyCheck
+import ru.hardmet.memologio.services.Validator.nonEmptyCheck
 import util.{DateParser, Parse}
 import cats.effect.Sync
 import cats.syntax.all._
@@ -20,7 +21,6 @@ import services.PostService
 import PostEndpoint._
 
 import scala.util.chaining.scalaUtilChainingOps
-import scala.util.control.NonFatal
 
 class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, PostId], responsePattern: DateTimeFormatter)
                                       (implicit parse: Parse[String, PostId],
