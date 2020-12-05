@@ -8,7 +8,6 @@ import java.net.URI
 import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 
-import ru.hardmet.memologio.services.Validator.nonEmptyCheck
 import util.{DateParser, Parse}
 import cats.effect.Sync
 import cats.syntax.all._
@@ -17,8 +16,9 @@ import io.circe.syntax._
 import org.http4s._
 import org.http4s.circe._
 import org.http4s.headers.Location
-import services.PostService
 import PostEndpoint._
+import services.Validator.nonEmptyCheck
+import services.PostService
 
 import scala.util.chaining.scalaUtilChainingOps
 
@@ -26,7 +26,6 @@ class PostEndpoint[F[_]: Sync, PostId](override val service: PostService[F, Post
                                       (implicit parse: Parse[String, PostId],
                                        localDateTimeParser: Parse[String, LocalDateTime]) extends Endpoint[F] {
 
-  import PostEndpoint.{PublishedDatePattern, PublishedDateTimePattern}
   val dateParser: DateParser = DateParser(PublishedDatePattern, PublishedDateTimePattern)
 
   //format:off

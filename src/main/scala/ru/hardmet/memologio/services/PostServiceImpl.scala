@@ -6,7 +6,7 @@ import java.time.{LocalDate, LocalDateTime}
 import cats.Monad
 import cats.implicits._
 import domain.posts.Post
-import ru.hardmet.memologio.infrastructure.repository.PostRepository
+import infrastructure.repository.PostRepository
 import tofu.logging.{Loggable, Logging}
 import tofu.syntax.logging.LoggingInterpolator
 
