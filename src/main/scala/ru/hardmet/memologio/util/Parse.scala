@@ -1,7 +1,7 @@
 package ru.hardmet.memologio
 package util
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
 
 import cats.syntax.all._
@@ -19,6 +19,8 @@ object Parse {
     Either.catchNonFatal(string.toInt).leftMap { t =>
       s"""Attempt to convert "$string" to Int failed, reason: ${t.getMessage}"""
     }
+
+  implicit val parseStringToLocalDate: Parse[String, LocalDate] = str => DateParser.parseLocalDate(str)
 
   implicit val parseStringToLocalDateTime: Parse[String, LocalDateTime] = str => DateParser.parseLocalDateTime(str)
 

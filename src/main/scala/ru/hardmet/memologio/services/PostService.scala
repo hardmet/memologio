@@ -1,25 +1,26 @@
 package ru.hardmet.memologio
 package services
 
-import java.time.{LocalDate, LocalDateTime}
-
-import ru.hardmet.memologio.domain.posts.Post
+import cats.data.{EitherNec, EitherT, NonEmptyChain}
+import domain.posts.Post
+import domain.WrongDataForPostError
 
 trait PostService[F[_], PostId] extends Service[F] {
 
-  def createOne(post: Post.Data): F[Post.Existing[PostId]]
-  def createMany(posts: Vector[Post.Data]): F[Vector[Post.Existing[PostId]]]
+  def createOne(url: String, published: String, likes: Int): F[EitherNec[String, Post.Existing[PostId]]]
+  def createMany(posts: Vector[Post.Data]): F[EitherNec[Vector[String], Vector[Post.Existing[PostId]]]]
 
-  def readOneById(id: PostId): F[Option[Post.Existing[PostId]]]
-  def readManyByIds(ids: Vector[PostId]): F[Vector[Post.Existing[PostId]]]
-  def readManyByPublishedDate(published: LocalDate): F[Vector[Post.Existing[PostId]]]
-  def readManyByPublishedDateTime(published: LocalDateTime): F[Vector[Post.Existing[PostId]]]
+  def readOneById(id: String): F[Either[String, Post.Existing[PostId]]]
+  def readManyByIds(ids: Vector[String]): F[EitherNec[String, Vector[Post.Existing[PostId]]]]
+  def readManyByPublishedDate(published: String): F[Either[String, Vector[Post.Existing[PostId]]]]
+  def readManyByPublishedDateTime(published: String): F[Either[String, Vector[Post.Existing[PostId]]]]
   def readAll: F[Vector[Post.Existing[PostId]]]
 
-  def updateOne(post: Post.Existing[PostId]): F[Post.Existing[PostId]]
-  def updateMany(posts: Vector[Post.Existing[PostId]]): F[Vector[Post.Existing[PostId]]]
+  def updateOne(id: String)
+               (url: String, published: String, likes: Int): F[EitherNec[String, Post.Existing[PostId]]]
+  def updateMany(posts: Vector[Post.Existing[PostId]]): F[EitherNec[Vector[String], Post.Existing[PostId]]]
 
-  def deleteOne(post: Post.Existing[PostId]): F[Unit]
-  def deleteMany(posts: Vector[Post.Existing[PostId]]): F[Unit]
+  def deleteOne(id: String): F[Either[String, Unit]]
+  def deleteMany(ids: Vector[String]): F[EitherNec[String, Unit]]
   def deleteAll(): F[Unit]
 }
