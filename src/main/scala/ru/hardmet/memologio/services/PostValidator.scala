@@ -5,88 +5,63 @@ import java.net.URI
 import java.time.{LocalDate, LocalDateTime}
 
 import cats.Monad
-import cats.data.{EitherNec, EitherT, NonEmptyChain}
+import cats.data.EitherNec
 import cats.implicits._
 import domain.posts.Post
 import util.{DateParser, Parse}
 
 
-trait Validator[F[_], PostId] {
+trait PostValidator[F[_], PostId] {
 
-  def validatePost(url: String, parsedPublished: Either[String, LocalDateTime],
-                   likes: Int): F[EitherNec[String, Post.Data]]
-
-  def validateId(id: String): F[Either[String, PostId]]
+  def validatePost(post: Post.Data): F[EitherNec[String, Post.Data]]
 
   def validateURL(url: String): F[Either[String, String]]
 
-  def validatePublished(published: String): F[Either[String, LocalDateTime]]
+  def validatePublished(published: LocalDateTime): F[Either[String, LocalDateTime]]
 
-  def validatePublishedDateOrDateTime(published: String): F[Either[String, Either[LocalDate, LocalDateTime]]]
+  def validatePublishedDate(published: LocalDate): F[Either[String, LocalDate]]
+
+  def validatePublishedDateOrDateTime(published: Either[LocalDate, LocalDateTime]): F[Either[String, Either[LocalDate, LocalDateTime]]]
 
   def validateLikes(likes: Int): F[Either[String, Int]]
-
-  private[services] def nonEmptyCheck(s: String)(fieldName: String): F[Either[String, String]]
 }
 
-class ValidatorInterpreter[F[_]: Monad, PostId](implicit parsePostId: Parse[String, PostId],
-                                                 parseLocalDateTime: Parse[String, LocalDateTime])
-  extends Validator[F, PostId] {
+class PostValidatorInterpreter[F[_]: Monad, PostId]
+  extends PostValidator[F, PostId] {
 
-  override def validatePost(url: String,
-                            parsedPublished: Either[String, LocalDateTime],
-                            likes: Int): F[EitherNec[String, Post.Data]] = {
+  override def validatePost(post: Post.Data): F[EitherNec[String, Post.Data]] =
     (
-      validateURL(url).map(_.toEitherNec),
-      F.pure(parsedPublished).map(_.toEitherNec),
-      validateLikes(likes).map(_.toEitherNec)
-      ).mapN { (validatedURL, validatedPublished, validatedLikes) =>
+      validateURL(post.url).map(_.toEitherNec),
+      validatePublished(post.published).map(_.toEitherNec),
+      validateLikes(post.likes).map(_.toEitherNec)
+      ).mapN{ (validatedURL, validatedPublished, validatedLikes) =>
       (validatedURL, validatedPublished, validatedLikes)
         .parTupled
         .map(Function.tupled(Post.Data.apply))
     }
-  }
-
-  override def validateId(id: String): F[Either[String, PostId]] =
-    nonEmptyCheck(id.trim)("uuid")
-      .map { eitherNonEmpty =>
-        eitherNonEmpty.flatMap { nonEmptyInput =>
-          parsePostId(nonEmptyInput)
-        }
-      }
 
   override def validateURL(url: String): F[Either[String, String]] =
-    nonEmptyCheck(url.trim)("url")
-      .map { eitherNonEmpty =>
-        eitherNonEmpty.flatMap { nonEmptyUrl =>
-          Either
-            .catchNonFatal {
-              URI.create(nonEmptyUrl)
-              url
-            }.leftMap(_ => s"$nonEmptyUrl does not match the URI format.")
-        }
-      }
+    Either
+      .catchNonFatal{
+        URI.create(url)
+        url
+      }.leftMap(_ => s"$url does not match the URI format.")
+      .pure[F]
 
-  override def validatePublished(published: String): F[Either[String, LocalDateTime]] =
-    nonEmptyCheck(published.trim)("published")
-      .map { eitherNonEmpty =>
-        eitherNonEmpty.flatMap { nonEmptyPublished =>
-          parseLocalDateTime(nonEmptyPublished)
-        }
-      }
+  def validatePublished(published: LocalDateTime): F[Either[String, LocalDateTime]] =
+    Right(published)
+      .filterOrElse(p => p.isBefore(LocalDateTime.now()), "Published date can't be after processing time")
+      .pure[F]
 
-  override def validatePublishedDateOrDateTime(published: String): F[Either[String, Either[LocalDate, LocalDateTime]]] =
-    nonEmptyCheck(published)("published")
-      .map{ eitherNonEmpty =>
-        eitherNonEmpty.flatMap(parseNonEmptyDate)
-      }
+  def validatePublishedDate(published: LocalDate): F[Either[String, LocalDate]] =
+    Right(published)
+      .filterOrElse(p => p.isBefore(LocalDate.now()), "Published date can't be after processing date")
+      .pure[F]
 
-  private def parseNonEmptyDate(nonEmptyDate: String): Either[String, Either[LocalDate, LocalDateTime]] =
-    Validator.dateParser.parseLocalDateTime(nonEmptyDate)
-      .map(Right.apply)
-      .leftFlatMap(dateTimeParsingError =>
-        Validator.dateParser.parseLocalDate(nonEmptyDate)
-          .map(localDate => Left(localDate))
+  override def validatePublishedDateOrDateTime(published: Either[LocalDate, LocalDateTime]): F[Either[String, Either[LocalDate, LocalDateTime]]] =
+    published.fold(validatePublishedDate, validatePublished)
+      .map(dateOrDateTime =>
+        dateOrDateTime.map(_ => published)
       )
 
   override def validateLikes(likes: Int): F[Either[String, Int]] = {
@@ -94,15 +69,9 @@ class ValidatorInterpreter[F[_]: Monad, PostId](implicit parsePostId: Parse[Stri
       .filterOrElse(_ >= 0, s"likes value: $likes should be more or equals to zero")
       .traverse(F.pure)
   }
-
-  override private[services] def nonEmptyCheck(s: String)(fieldName: String): F[Either[String, String]] =
-    Option(s)
-      .toRight(s"input $fieldName can not be null")
-      .filterOrElse(!_.isEmpty, s"input $fieldName can not be empty or contains only spaces")
-      .traverse(F.pure)
 }
 
-object Validator {
+object PostValidator {
 
   private val PublishedDatePattern: String = "yyyy-MM-dd"
 
@@ -111,7 +80,7 @@ object Validator {
   val dateParser: DateParser = DateParser(PublishedDatePattern, PublishedDateTimePattern)
 
   def apply[F[_]: Monad, PostId]()(implicit parsePostId: Parse[String, PostId],
-                    parseLocalDateTime: Parse[String, LocalDateTime]): Validator[F, PostId] =
-    new ValidatorInterpreter()
+                                   parseLocalDateTime: Parse[String, LocalDateTime]): PostValidator[F, PostId] = ???
+//    new ValidatorInterpreter()
 
 }

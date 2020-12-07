@@ -11,7 +11,7 @@ import infrastructure.logging.ContextLogging
 import infrastructure.repository.DBConnector
 import infrastructure.repository.doobie.DoobieConnector
 import natchez.Trace.Implicits.noop
-import services.{PostService, PostServiceInterpreter, Validator}
+import services.{PostParser, PostService, PostServiceInterpreter, PostValidator}
 
 import scala.concurrent.ExecutionContext
 
@@ -49,7 +49,7 @@ class ApplicationBuilderBase[F[_] : ConcurrentEffect : ContextShift : Timer](val
       config <- Resource.liftF(configReader)
       repository <- dbConnector.connectToRepository(config.db)
       logger <- Resource.liftF(new ContextLogging[F].loggerForService[PostService[F, UUID]])
-      postService = PostServiceInterpreter(Validator[F, UUID], repository)(logger)
+      postService = PostServiceInterpreter(PostParser[F, UUID], PostValidator[F, UUID], repository)(logger)
       r = router(postService)
       server <- Resource.liftF[F, HttpServer[F]](httpServer(executionContext)(config.server)(Seq(r)))
     } yield server)
