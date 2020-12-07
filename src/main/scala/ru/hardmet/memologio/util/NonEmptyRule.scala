@@ -1,4 +1,5 @@
-package ru.hardmet.memologio.util
+package ru.hardmet.memologio
+package util
 
 import cats.Monad
 import cats.implicits.toTraverseOps

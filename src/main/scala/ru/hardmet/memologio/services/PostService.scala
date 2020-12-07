@@ -10,15 +10,15 @@ trait PostService[F[_], PostId] extends Service[F] {
   def createMany(posts: Vector[(String, String, Int)]): F[Vector[EitherNec[String, Post.Existing[PostId]]]]
 
   def readOneById(id: String): F[Either[String, Post.Existing[PostId]]]
-  def readManyByIds(ids: Vector[String]): F[Vector[Either[String, Post.Existing[PostId]]]]
+  def readManyByIds(ids: Vector[String]): F[Either[String, Vector[Post.Existing[PostId]]]]
   def readManyByPublished(published: String): F[Either[String, Vector[Post.Existing[PostId]]]]
   def readAll: F[Vector[Post.Existing[PostId]]]
 
   def updateOneAllFields(id: String)
                         (url: String, published: String, likes: Int): F[EitherNec[String, Post.Existing[PostId]]]
-  def updateURL(id: String)(url: String): F[Either[String, Post.Existing[PostId]]]
-  def updatePublished(id: String)(published: String): F[Either[String, Post.Existing[PostId]]]
-  def updateLikes(id: String)(likes: Int): F[Either[String, Post.Existing[PostId]]]
+  def updateURL(id: String)(url: String): F[ValidatedPostUpdate[PostId]]
+  def updatePublished(id: String)(published: String): F[ValidatedPostUpdate[PostId]]
+  def updateLikes(id: String)(likes: Int): F[ValidatedPostUpdate[PostId]]
 
   def updateMany(posts: Vector[Post.Existing[PostId]]): F[Vector[EitherNec[String, Post.Existing[PostId]]]]
 

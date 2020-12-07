@@ -34,7 +34,7 @@ class PostValidatorInterpreter[F[_]: Monad, PostId]
       validateURL(post.url).map(_.toEitherNec),
       validatePublished(post.published).map(_.toEitherNec),
       validateLikes(post.likes).map(_.toEitherNec)
-      ).mapN{ (validatedURL, validatedPublished, validatedLikes) =>
+      ).mapN { (validatedURL, validatedPublished, validatedLikes) =>
       (validatedURL, validatedPublished, validatedLikes)
         .parTupled
         .map(Function.tupled(Post.Data.apply))
@@ -42,7 +42,7 @@ class PostValidatorInterpreter[F[_]: Monad, PostId]
 
   override def validateURL(url: String): F[Either[String, String]] =
     Either
-      .catchNonFatal{
+      .catchNonFatal {
         URI.create(url)
         url
       }.leftMap(_ => s"$url does not match the URI format.")
@@ -79,8 +79,8 @@ object PostValidator {
 
   val dateParser: DateParser = DateParser(PublishedDatePattern, PublishedDateTimePattern)
 
-  def apply[F[_]: Monad, PostId]()(implicit parsePostId: Parse[String, PostId],
-                                   parseLocalDateTime: Parse[String, LocalDateTime]): PostValidator[F, PostId] = ???
-//    new ValidatorInterpreter()
+  def apply[F[_] : Monad, PostId]()(implicit parsePostId: Parse[String, PostId],
+                                    parseLocalDateTime: Parse[String, LocalDateTime]): PostValidator[F, PostId] =
+    new PostValidatorInterpreter[F, PostId]()
 
 }
