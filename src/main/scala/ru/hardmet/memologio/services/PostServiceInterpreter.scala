@@ -2,12 +2,14 @@ package ru.hardmet.memologio
 package services
 
 import cats.Monad
-import cats.data.EitherNec
+import cats.data.{EitherNec, NonEmptyChain}
 import cats.implicits._
 import domain.posts.Post
 import infrastructure.repository.PostRepository
 import tofu.logging.{Loggable, Logging}
 import tofu.syntax.logging.LoggingInterpolator
+
+import scala.util.chaining.scalaUtilChainingOps
 
 class PostServiceInterpreter[F[_] : Monad : Logging, PostId](parser: PostParser[F, PostId],
                                                              validator: PostValidator[F, PostId],
@@ -26,28 +28,19 @@ class PostServiceInterpreter[F[_] : Monad : Logging, PostId](parser: PostParser[
       )
     } yield post
 
-  // TODO remove
-  //  override def createMany(posts: Vector[(String, String, Int)]): F[Vector[EitherNec[String, Post.Existing[PostId]]]] =
-  //    for {
-  //      _ <- debug"createMany posts ${getRawPostsLine(posts)}"
-  //      postsCreationResult <- posts.traverse(Function.tupled(createOne))
-  //      _ = for {
-  //        postCreationResult <- postsCreationResult
-  //        _ = postCreationResult.fold(
-  //          errors => debug"post has not created, reasons:\n${errors.show.mkString("\n")}",
-  //          ps => debug"posts: $ps created"
-  //        )
-  //      } yield ()
-  //    } yield postsCreationResult
-
   override def createMany(posts: Vector[(String, String, Int)]): F[Vector[EitherNec[String, Post.Existing[PostId]]]] =
     for {
       _ <- debug"createMany posts:\n${getRawPostsLine(posts)}"
       vectorErrorsNecOrPostsData <- posts.traverse(Function.tupled(parseAndValidatePost))
-      errorsNecOrVectorPostData = vectorErrorsNecOrPostsData.sequence
-      createdPosts <- errorsNecOrVectorPostData.traverse(writeMany)
-      _ <- debug"posts has not created reasons:\n${necStringToString(vectorErrorsNecOrPostsData)}"
-    } yield createdPosts.sequence
+      (errors, validPosts) = vectorErrorsNecOrPostsData.partition(_.isLeft)
+      createdPosts <- validPosts.collect{case Right(post) => post}.pipe(writeMany)
+      _ <- debug"posts created:\n${createdPosts.mkString(",\n")}"
+      liftedPosts = createdPosts.map(Right[NonEmptyChain[String], Post.Existing[PostId]])
+      _ <- debug"posts has not created reasons:\n${necStringToString(errors)}"
+      liftedErrors = errors.collect{
+        case Left(errorsNec) => Left[NonEmptyChain[String], Post.Existing[PostId]](errorsNec)
+      }
+    } yield liftedPosts ++ liftedErrors
 
   private def getRawPostsLine(posts: Iterable[(String, String, Int)]): String =
     posts.map {
@@ -57,9 +50,7 @@ class PostServiceInterpreter[F[_] : Monad : Logging, PostId](parser: PostParser[
   private def parseAndValidatePost(url: String, published: String, likes: Int): F[EitherNec[String, Post.Data]] =
     for {
       parsedPublished <- parser.parsePublished(published)
-      postData <- parsedPublished.toEitherNec.flatTraverse(published =>
-        validator.validatePost(Post.Data(url, published, likes))
-      )
+      postData <- validator.validatePostWithUnreliablyPublished(url, likes)(parsedPublished)
     } yield postData
 
   private def necStringToString[T](eitherNECs: Vector[EitherNec[String, T]]): String =
@@ -87,18 +78,24 @@ class PostServiceInterpreter[F[_] : Monad : Logging, PostId](parser: PostParser[
       )
     } yield post
 
-  override def readManyByIds(ids: Vector[String]): F[Either[String, Vector[Post.Existing[PostId]]]] =
+  override def readManyByIds(ids: Vector[String]): F[Vector[Either[String, Post.Existing[PostId]]]] =
     for {
       _ <- debug"read many posts by ids: ${ids.mkString(", ")}"
       vectorErrorNecOrId <- ids.traverse(parser.parseId)
-      necOrVectorIds = vectorErrorNecOrId.sequence
-      posts <- necOrVectorIds.traverse(repository.getListByIds)
-      _ <- logFoundErrorsOrPosts(posts)
-    } yield posts
+      (errors, validIds) = vectorErrorNecOrId.partition(_.isLeft)
+      posts <- validIds.collect{case Right(post) => post}.pipe(repository.getListByIds)
+      _ <- debug"found posts:\n${posts.mkString(",\n")}"
+      _ <- logFoundErrorsOrPosts(ids, posts.map(_.id.toString).toSet, errors)
+      liftedPosts = posts.map(Right[String, Post.Existing[PostId]])
+      liftedErrors = errors.collect{
+        case Left(errorsNec) => Left[String, Post.Existing[PostId]](errorsNec)
+      }
+    } yield liftedPosts ++ liftedErrors
 
+  // TODO refactoring, get rid of Either[LocalDate, LocalDateTime]
   override def readManyByPublished(published: String): F[Either[String, Vector[Post.Existing[PostId]]]] =
     for {
-      _ <- debug"read post by published date $published"
+      _ <- debug"read post by published date: $published"
       parsedPublished <- parser.parsePublishedDateOrDateTime(published)
       validatedPublished <- parsedPublished.flatTraverse(validator.validatePublishedDateOrDateTime)
       posts <- validatedPublished.traverse(
@@ -108,7 +105,10 @@ class PostServiceInterpreter[F[_] : Monad : Logging, PostId](parser: PostParser[
             repository.findByPublishedDateTime
           )
       )
-      _ <- logFoundErrorsOrPosts(posts)
+      _ <- posts.fold(
+        error => debug"posts not found, reason: $error",
+        ps => debug"found posts:\n${ps.mkString(",\n")}"
+      )
     } yield posts
 
   override def readAll: F[Vector[Post.Existing[PostId]]] =
@@ -191,14 +191,6 @@ class PostServiceInterpreter[F[_] : Monad : Logging, PostId](parser: PostParser[
       errorNecOrVectorWrittenPosts <- errorNecOrVectorValidPosts.traverse(writeMany)
     } yield errorNecOrVectorWrittenPosts.sequence
 
-  // TODO remove
-  //  posts.traverse(post =>
-  //      updateOneAllFields(post.id.toString)(
-  //        post.url,
-  //        post.published.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-  //        post.likes)
-  //    )
-
   override def deleteOne(id: String): F[Either[String, Unit]] =
     for {
       _ <- debug"delete post with id $id"
@@ -210,16 +202,18 @@ class PostServiceInterpreter[F[_] : Monad : Logging, PostId](parser: PostParser[
       )
     } yield errorOrDeletedUnit
 
-  override def safeDeleteMany(ids: Vector[String]): F[Either[String, Unit]] =
+  override def safeDeleteMany(ids: Vector[String]): F[Vector[Either[String, Unit]]] =
     for {
       _ <- warn"delete posts by ids: ${ids.mkString(",")}"
       vectorErrorOrPosts <- readManyByIds(ids)
-      result <- vectorErrorOrPosts.traverse(repository.deleteMany)
-      _ <- result.fold(
-        error => warn"posts has not deleted reasons:\n$error",
-        _ => warn"posts has been deleted: ${ids.mkString(", ")}"
-      )
-    } yield result
+      (errors, posts) = vectorErrorOrPosts.partition(_.isLeft)
+      flattenPosts = posts.collect{case Right(post) => post}
+      _ <- repository.deleteMany(flattenPosts)
+      _ <- debug"posts deleted:\n${flattenPosts.mkString(",\n")}"
+      _ <- debug"posts has not deleted reasons:\n${necStringToString(errors.map(_.toEitherNec))}"
+      liftedErrors = errors.collect{ case Left(errors) => Left[String, Unit](errors) }
+      liftedPosts = flattenPosts.map(_ => Right[String, Unit](()))
+    } yield liftedPosts ++ liftedErrors
 
   override def deleteAll(): F[Unit] =
     for {
@@ -229,11 +223,10 @@ class PostServiceInterpreter[F[_] : Monad : Logging, PostId](parser: PostParser[
     } yield res
 
 
-  private def logFoundErrorsOrPosts(errorsOrPosts: Either[String, Vector[Post.Existing[PostId]]]): F[Unit] =
-    errorsOrPosts.fold(
-      error => debug"posts not found, reason: $error",
-      ps => debug"found posts:\n${ps.mkString("\n")}"
-    )
+  private def logFoundErrorsOrPosts(found: Vector[String], keys: Set[String], errors: Vector[Either[String, PostId]]): F[Unit] =
+    debug"""for keys ${found.filter(fk => !keys.contains(fk))} posts not found, errors:
+           ${errors.collect{case Left(e) => e}.mkString(",\n")}
+           """
 }
 
 object PostServiceInterpreter {

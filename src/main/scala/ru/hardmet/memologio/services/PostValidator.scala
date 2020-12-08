@@ -13,6 +13,9 @@ import util.{DateParser, Parse}
 
 trait PostValidator[F[_], PostId] {
 
+  def validatePostWithUnreliablyPublished(url: String, likes: Int)
+                                         (published: Either[String, LocalDateTime]): F[EitherNec[String, Post.Data]]
+
   def validatePost(post: Post.Data): F[EitherNec[String, Post.Data]]
 
   def validateURL(url: String): F[Either[String, String]]
@@ -29,16 +32,27 @@ trait PostValidator[F[_], PostId] {
 class PostValidatorInterpreter[F[_]: Monad, PostId]
   extends PostValidator[F, PostId] {
 
+  override def validatePostWithUnreliablyPublished(url: String, likes: Int)
+                                                  (published: Either[String, LocalDateTime]): F[EitherNec[String, Post.Data]] =
+    (
+      validateURL(url).map(_.toEitherNec),
+      published.flatTraverse(validatePublished).map(_.toEitherNec),
+      validateLikes(likes).map(_.toEitherNec)
+      ).mapN(parCreatePostData _)
+
   override def validatePost(post: Post.Data): F[EitherNec[String, Post.Data]] =
     (
       validateURL(post.url).map(_.toEitherNec),
       validatePublished(post.published).map(_.toEitherNec),
       validateLikes(post.likes).map(_.toEitherNec)
-      ).mapN { (validatedURL, validatedPublished, validatedLikes) =>
-      (validatedURL, validatedPublished, validatedLikes)
-        .parTupled
-        .map(Function.tupled(Post.Data.apply))
-    }
+      ).mapN(parCreatePostData _)
+
+  private def parCreatePostData(errorNecOrURL: EitherNec[String,String],
+                                errorNecOrPublished: EitherNec[String,LocalDateTime],
+                                errorNecOrLikes: EitherNec[String,Int]): EitherNec[String, Post.Data] =
+    (errorNecOrURL, errorNecOrPublished, errorNecOrLikes)
+      .parTupled
+      .map(Function.tupled(Post.Data.apply))
 
   override def validateURL(url: String): F[Either[String, String]] =
     Either

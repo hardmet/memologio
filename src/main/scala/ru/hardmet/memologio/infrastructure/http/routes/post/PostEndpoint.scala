@@ -15,7 +15,7 @@ import io.circe.syntax._
 import org.http4s._
 import org.http4s.circe._
 import org.http4s.headers.Location
-import services.{PostService, ValidatedPostUpdate}
+import services.PostService
 
 import scala.util.chaining.scalaUtilChainingOps
 
@@ -74,7 +74,7 @@ class PostEndpoint[F[_] : Sync, PostId](override val service: PostService[F, Pos
           )
     )
 
-  private def processUpdateResult[T](result: F[ValidatedPostUpdate[PostId]]): F[Response[F]] =
+  private def processUpdateResult[T](result: F[Either[String, Post.Existing[PostId]]]): F[Response[F]] =
     result.flatMap { errorOrUpdated =>
       errorOrUpdated.fold(
         BadRequest(_),
