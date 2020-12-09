@@ -1,0 +1,142 @@
+### This file requires the REST Client VS Code extension
+### https://marketplace.visualstudio.com/items?itemName=humao.rest-client
+
+#endpoint = http://localhost:8080/api/posts
+
+
+### Show all
+GET {{endpoint}}
+
+### Create
+POST {{endpoint}}
+
+{
+  "url": "vk.com",
+  "published": "   2010-02-27T16:02",
+  "likes" : 0
+}
+
+### Create (with empty url)
+POST {{endpoint}}
+
+{
+  "url": "",
+  "published": "   2020-08-27T22:30   ",
+  "likes" : 0
+}
+
+### Create (with only spaces)
+POST {{endpoint}}
+
+{
+  "url": "   ",
+  "published": "   2020-08-27T22:30   ",
+  "likes" : 0
+}
+
+### Create (with all errors)
+POST {{endpoint}}
+
+{
+  "url": "[there is no url]",
+  "published": "   2020-08-27 22:30   ",
+  "likes" : -2
+}
+
+### Create (with published errors)
+POST {{endpoint}}
+
+{
+  "url": "url.com",
+  "published": "   2020-08-27 22:30   ",
+  "likes" : 0
+}
+
+### Create (with published errors)
+POST {{endpoint}}
+
+{
+  "url": "url.com",
+  "published": "   2020-08-27",
+  "likes" : 0
+}
+
+### Create (with empty published)
+POST {{endpoint}}
+
+{
+  "url": "url.com",
+  "published": "          ",
+  "likes" : 0
+}
+
+### Create (with published errors)
+POST {{endpoint}}
+
+{
+  "url": "url.com",
+  "published": "",
+  "likes" : 0
+}
+
+### Update (url)
+PUT {{endpoint}}/120fc546-3cbb-4a22-b9c3-d47c5d6961bb
+
+{
+  "url": "  yandex.ru   "
+}
+
+### Update (published)
+PUT {{endpoint}}/120fc546-3cbb-4a22-b9c3-d47c5d6961bb
+
+{
+  "published": "   2020-10-02T02:51   "
+}
+
+### Update (all fields)
+PUT {{endpoint}}/163171af-bb53-4240-abcc-83cec72e8e9a
+
+{
+  "url": "   github.com",
+  "published": "2019-01-01T00:01   ",
+  "likes": 10
+}
+
+### Update (all fields (parallel error handling))
+PUT {{endpoint}}/cb33d667-01ca-49c9-b22e-6df2ddd5a521
+
+{
+  "url": "   [update [script]   ",
+  "published": "   2020-8-25h 17:35   ",
+  "likes": -12
+}
+
+### Seach by id (no posts found)
+GET {{endpoint}}/8f0c4bd7-a4fe-4a16-a14b-fcc1268788bd
+
+### Seach by id (1 posts found)
+GET {{endpoint}}/120fc546-3cbb-4a22-b9c3-d47c5d6961bb
+
+### Seach by id (invalid)
+GET {{endpoint}}/0fd02eb6-1378- 4b38-be71-a51bf550394f
+
+### Seach by url should redirect to show all
+GET {{endpoint}}?url=script
+
+### Seach by published date
+GET {{endpoint}}?published=2020-10-02
+
+### Seach by published date time
+GET {{endpoint}}?published=2020-10-02T02:51
+
+### Delete all
+DELETE {{endpoint}}
+
+### Delete (no posts found)
+DELETE {{endpoint}}/8f0c4bd7-a4fe-4a16-a14b-fcc1268788bd
+
+### Delete (invalid)
+DELETE {{endpoint}}/0fd02eb6-1378- 4b38-be71-a51bf550394f
+
+### Delete (the one that works)
+DELETE {{endpoint}}/be8c063f-4392-460c-95fa-6815db240d13
