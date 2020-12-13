@@ -223,7 +223,9 @@ class PostServiceInterpreter[F[_] : Monad : Logging, PostId](parser: PostParser[
     } yield res
 
 
-  private def logFoundErrorsOrPosts(found: Vector[String], keys: Set[String], errors: Vector[Either[String, PostId]]): F[Unit] =
+  private def logFoundErrorsOrPosts(found: Vector[String],
+                                    keys: Set[String],
+                                    errors: Vector[Either[String, PostId]]): F[Unit] =
     debug"""for keys ${found.filter(fk => !keys.contains(fk))} posts not found, errors:
            ${errors.collect{case Left(e) => e}.mkString(",\n")}
            """
