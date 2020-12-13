@@ -55,19 +55,19 @@ class PostValidatorInterpreter[F[_]: Monad: NonEmptyRule, PostId] extends PostVa
 
   override def validateURL(url: String): F[Either[String, String]] =
     for {
-      errorOrNonEmptyURL <- F.nonEmptyApply(url.trim)("url")
+      errorOrNonEmptyURI <- F.nonEmptyApply(url.trim)("url")
       errorOrValidURL = for {
-        nonEmptyURL <- errorOrNonEmptyURL
-        errorOrValidURL <- validateNonEmptyURL(nonEmptyURL)
+        nonEmptyURL <- errorOrNonEmptyURI
+        errorOrValidURL <- validateNonEmptyURI(nonEmptyURL)
       } yield errorOrValidURL
     } yield errorOrValidURL
 
-  private[services] def validateNonEmptyURL(nonEmptyURL: String): Either[String, String] =
+  private[services] def validateNonEmptyURI(nonEmptyURI: String): Either[String, String] =
     Either
-      .catchNonFatal {
-        URI.create(nonEmptyURL)
-        nonEmptyURL
-      }.leftMap(_ => s"url: '$nonEmptyURL' does not match the URI format.")
+      .catchOnly[IllegalArgumentException] {
+        URI.create(nonEmptyURI)
+        nonEmptyURI
+      }.leftMap(_ => s"uri: '$nonEmptyURI' does not match the URI format.")
 
   def validatePublished(published: LocalDateTime): F[Either[String, LocalDateTime]] =
     validatePublishedBase(published)

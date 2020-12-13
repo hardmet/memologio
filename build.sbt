@@ -72,9 +72,11 @@ libraryDependencies += "ru.tinkoff"                 %% "tofu-logging"         % 
 
 libraryDependencies += "org.scalactic"              %% "scalactic"            % "3.0.8"
 libraryDependencies += "org.scalatest"              %% "scalatest"            % "3.0.8" % "it,test"
-libraryDependencies += "org.typelevel"              %% "discipline-scalatest" % "1.0.1"
-libraryDependencies += "org.scalacheck"             %% "scalacheck"           % "1.14.1-RC2" % "test"
+libraryDependencies += "org.typelevel"              %% "discipline-scalatest" % "2.1.0" % "test"
+libraryDependencies += "org.scalacheck"             %% "scalacheck"           % "1.15.1" % "test"
 libraryDependencies += "org.mockito"                % "mockito-core"          % "3.0.0" % "test"
+libraryDependencies += "org.scalatestplus"          %% "scalacheck-1-14"      % "3.2.2.0" % "test"
+libraryDependencies += "com.github.alexarchambault" %% "scalacheck-shapeless_1.14" % "1.2.5" % "test"
 
 Defaults.itSettings
 configs(IntegrationTest)
