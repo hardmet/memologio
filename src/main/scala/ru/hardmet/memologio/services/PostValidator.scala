@@ -1,14 +1,14 @@
 package ru.hardmet.memologio
 package services
 
-import java.net.URI
-import java.time.{LocalDate, LocalDateTime}
-
 import cats.Monad
 import cats.data.EitherNec
 import cats.implicits._
 import domain.posts.Post
 import util.{DateParser, NonEmptyRule}
+
+import java.net.URI
+import java.time.{LocalDate, LocalDateTime}
 
 
 trait PostValidator[F[_], PostId] {
@@ -29,7 +29,37 @@ trait PostValidator[F[_], PostId] {
   def validateLikes(likes: Int): F[Either[String, Int]]
 }
 
-class PostValidatorInterpreter[F[_]: Monad: NonEmptyRule, PostId] extends PostValidator[F, PostId] {
+class PostValidatorEffectLess {
+
+  private[services] def parCreatePostData(errorNecOrURL: EitherNec[String, String],
+                                          errorNecOrPublished: EitherNec[String, LocalDateTime],
+                                          errorNecOrLikes: EitherNec[String, Int]): EitherNec[String, Post.Data] =
+    (errorNecOrURL, errorNecOrPublished, errorNecOrLikes)
+      .parTupled
+      .map(Function.tupled(Post.Data.apply))
+
+  private[services] def isValidURI(nonEmptyURI: String): Either[String, String] =
+    Either
+      .catchOnly[IllegalArgumentException] {
+        URI.create(nonEmptyURI)
+        nonEmptyURI
+      }.leftMap(_ => s"uri: '$nonEmptyURI' does not match the URI format.")
+
+  private[services] def isValidPublished(published: LocalDateTime): Either[String, LocalDateTime] =
+    Right(published)
+      .filterOrElse(p => p.isBefore(LocalDateTime.now()), "Published date can't be after processing time")
+
+  def isValidPublishedDate(published: LocalDate): Either[String, LocalDate] =
+    Right(published)
+      .filterOrElse(p => p.isBefore(LocalDate.now()), "Published date can't be after processing date")
+
+  private[services] def isValidLikes(likes: Int): Either[String, Int] =
+    Right(likes)
+      .filterOrElse(_ >= 0, s"likes: $likes should be more or equals to zero")
+}
+
+class PostValidatorInterpreter[F[_] : Monad : NonEmptyRule, PostId] extends PostValidatorEffectLess
+  with PostValidator[F, PostId] {
 
   override def validatePostWithUnreliablyPublished(url: String, likes: Int)
                                                   (published: Either[String, LocalDateTime]): F[EitherNec[String, Post.Data]] =
@@ -46,40 +76,21 @@ class PostValidatorInterpreter[F[_]: Monad: NonEmptyRule, PostId] extends PostVa
       validateLikes(post.likes).map(_.toEitherNec)
       ).mapN(parCreatePostData)
 
-  private def parCreatePostData(errorNecOrURL: EitherNec[String,String],
-                                errorNecOrPublished: EitherNec[String,LocalDateTime],
-                                errorNecOrLikes: EitherNec[String,Int]): EitherNec[String, Post.Data] =
-    (errorNecOrURL, errorNecOrPublished, errorNecOrLikes)
-      .parTupled
-      .map(Function.tupled(Post.Data.apply))
-
   override def validateURL(url: String): F[Either[String, String]] =
     for {
-      errorOrNonEmptyURI <- F.nonEmptyApply(url.trim)("url")
+      errorOrNonEmptyURI <- F.nonEmptyRun(url.trim)("url")
       errorOrValidURL = for {
         nonEmptyURL <- errorOrNonEmptyURI
-        errorOrValidURL <- validateNonEmptyURI(nonEmptyURL)
+        errorOrValidURL <- isValidURI(nonEmptyURL)
       } yield errorOrValidURL
     } yield errorOrValidURL
 
-  private[services] def validateNonEmptyURI(nonEmptyURI: String): Either[String, String] =
-    Either
-      .catchOnly[IllegalArgumentException] {
-        URI.create(nonEmptyURI)
-        nonEmptyURI
-      }.leftMap(_ => s"uri: '$nonEmptyURI' does not match the URI format.")
-
   def validatePublished(published: LocalDateTime): F[Either[String, LocalDateTime]] =
-    validatePublishedBase(published)
+    isValidPublished(published)
       .pure[F]
 
-  private[services] def validatePublishedBase(published: LocalDateTime): Either[String, LocalDateTime] =
-    Right(published)
-      .filterOrElse(p => p.isBefore(LocalDateTime.now()), "Published date can't be after processing time")
-
   def validatePublishedDate(published: LocalDate): F[Either[String, LocalDate]] =
-    Right(published)
-      .filterOrElse(p => p.isBefore(LocalDate.now()), "Published date can't be after processing date")
+    isValidPublishedDate(published)
       .pure[F]
 
   override def validatePublishedDateOrDateTime(published: Either[LocalDate, LocalDateTime]): F[Either[String, Either[LocalDate, LocalDateTime]]] =
@@ -88,11 +99,9 @@ class PostValidatorInterpreter[F[_]: Monad: NonEmptyRule, PostId] extends PostVa
         dateOrDateTime.map(_ => published)
       )
 
-  override def validateLikes(likes: Int): F[Either[String, Int]] = {
-    Right(likes)
-      .filterOrElse(_ >= 0, s"likes: $likes should be more or equals to zero")
-      .traverse(F.pure)
-  }
+  override def validateLikes(likes: Int): F[Either[String, Int]] =
+    isValidLikes(likes)
+      .pure[F]
 }
 
 object PostValidator {
@@ -103,7 +112,7 @@ object PostValidator {
 
   val dateParser: DateParser = DateParser(PublishedDatePattern, PublishedDateTimePattern)
 
-  def apply[F[_] : Monad: NonEmptyRule, PostId](): PostValidator[F, PostId] =
+  def apply[F[_] : Monad : NonEmptyRule, PostId](): PostValidator[F, PostId] =
     new PostValidatorInterpreter[F, PostId]()
 
 }

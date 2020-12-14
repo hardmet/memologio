@@ -5,19 +5,19 @@ import cats.Monad
 import cats.implicits._
 
 trait NonEmptyRule[F[_]] {
-  def nonEmptyApply(s: String)(fieldName: String): F[Either[String, String]]
+  def nonEmptyRun(s: String)(fieldName: String): F[Either[String, String]]
 }
 
 class NonEmptyRuleInterpreter[F[_] : Monad] extends NonEmptyRule[F] {
 
-  override def nonEmptyApply(s: String)(fieldName: String): F[Either[String, String]] =
+  override def nonEmptyRun(s: String)(fieldName: String): F[Either[String, String]] =
     nonEmpty(s)(fieldName)
       .pure[F]
 
   private[util] def nonEmpty(s: String)(fieldName: String): Either[String, String] =
     Option(s)
       .toRight(s"input $fieldName can not be null")
-      .filterOrElse(!_.isEmpty, s"input $fieldName can not be empty or contains only spaces")
+      .filterOrElse(_.nonEmpty, s"input $fieldName can not be empty or contains only spaces")
 }
 
 object NonEmptyRule {

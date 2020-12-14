@@ -29,7 +29,7 @@ class PostParserInterpreter[F[_] : Monad, PostId](implicit parsePostId: Parse[St
     parseWithNonEmpty(published)("published")(parseLocalDateTime)
 
   override def parsePublishedDateOrDateTime(published: String): F[Either[String, Either[LocalDate, LocalDateTime]]] =
-    nonEmptyApply(published)("published").map { errorOrNonEmptyPublished: Either[String, String] =>
+    nonEmptyRun(published)("published").map { errorOrNonEmptyPublished: Either[String, String] =>
       errorOrNonEmptyPublished.flatMap { nonEmptyPublished =>
         parseLocalDateTime(nonEmptyPublished)
           .map(Right.apply)
@@ -42,7 +42,7 @@ class PostParserInterpreter[F[_] : Monad, PostId](implicit parsePostId: Parse[St
 
   private def parseWithNonEmpty[Output](input: String)(entityName: String = "")
                                        (implicit parse: Parse[String, Output]): F[Either[String, Output]] =
-    nonEmptyApply(input.trim)(entityName)
+    nonEmptyRun(input.trim)(entityName)
       .map { errorOrNonEmpty: Either[String, String] =>
         errorOrNonEmpty.flatMap { nonEmpty =>
           parse(nonEmpty)
