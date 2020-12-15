@@ -1,5 +1,6 @@
 package ru.hardmet.memologio
 
+import cats.data.{EitherNec, NonEmptyChain}
 import org.scalacheck.{Arbitrary, Gen}
 import tofu.logging.Loggable
 
@@ -7,8 +8,15 @@ import java.time.LocalDateTime
 
 package object services {
 
-  case class ValidURI(v: String)
-  case class InvalidURI(v: String)
+  class TestURI(val value: String)
+
+  case class ValidURI(override val value: String) extends TestURI(value)
+
+  case class InvalidURI(override val value: String) extends TestURI(value)
+
+  case class PostData(url: EitherNec[String, String],
+                      published: EitherNec[String, LocalDateTime],
+                      likes: EitherNec[String, Int])
 
   final implicit val arbitraryForLDT: Arbitrary[LocalDateTime] =
     Arbitrary {
@@ -24,9 +32,9 @@ package object services {
     Arbitrary {
       for {
         protocol <- Gen.oneOf("http", "https", "ftp", "file")
-        domain   <- Gen.alphaNumStr
-        tld      <- Gen.oneOf("com", "io")
-        path     <- Arbitrary.arbitrary[String]
+        domain <- Gen.alphaNumStr
+        tld <- Gen.oneOf("com", "io")
+        path <- Arbitrary.arbitrary[String]
       } yield ValidURI(s"$protocol://$domain.$tld/$path")
     }
 
@@ -35,11 +43,33 @@ package object services {
       for {
         invalidChar <- Gen.oneOf("[", "]", "{", "}", "|", "(", ")")
         protocol <- Gen.oneOf("http", "https", "ftp", "file")
-        domain   <- Gen.alphaNumStr
-        tld      <- Gen.oneOf("com", "io")
-        path     <- Arbitrary.arbitrary[String]
+        domain <- Gen.alphaNumStr
+        tld <- Gen.oneOf("com", "io")
+        path <- Arbitrary.arbitrary[String]
       } yield InvalidURI(s"$invalidChar$protocol://$domain.$tld/$path")
     }
 
   implicit val unitLoggable: Loggable[Unit] = Loggable[String].contramap(_ => "()")
+
+
+  implicit val PostDataArbitrary: Arbitrary[PostData] =
+    Arbitrary {
+      for {
+        validURI <- ValidURIArbitrary.arbitrary
+        invalidURI <- InvalidURIArbitrary.arbitrary
+        url <- Gen.oneOf(
+          Right[NonEmptyChain[String], String](validURI.value),
+          Left[NonEmptyChain[String], String](NonEmptyChain(s"invalid url ${invalidURI.value}"))
+        )
+        published <- Gen.oneOf(
+          Right[NonEmptyChain[String], LocalDateTime](LocalDateTime.now()),
+          Left[NonEmptyChain[String], LocalDateTime](NonEmptyChain(s"published is empty", "published is wrong"))
+        )
+        likes <- Gen.oneOf(
+          Right[NonEmptyChain[String], Int](42),
+          Left[NonEmptyChain[String], Int](NonEmptyChain(s"likes is wrong"))
+        )
+      } yield PostData(url, published, likes)
+    }
+
 }

@@ -31,7 +31,7 @@ trait PostValidator[F[_], PostId] {
 
 class PostValidatorEffectLess {
 
-  private[services] def parCreatePostData(errorNecOrURL: EitherNec[String, String],
+  private[services] def parPostValidation(errorNecOrURL: EitherNec[String, String],
                                           errorNecOrPublished: EitherNec[String, LocalDateTime],
                                           errorNecOrLikes: EitherNec[String, Int]): EitherNec[String, Post.Data] =
     (errorNecOrURL, errorNecOrPublished, errorNecOrLikes)
@@ -67,14 +67,14 @@ class PostValidatorInterpreter[F[_] : Monad : NonEmptyRule, PostId] extends Post
       validateURL(url).map(_.toEitherNec),
       published.flatTraverse(validatePublished).map(_.toEitherNec),
       validateLikes(likes).map(_.toEitherNec)
-      ).mapN(parCreatePostData)
+      ).mapN(parPostValidation)
 
   override def validatePost(post: Post.Data): F[EitherNec[String, Post.Data]] =
     (
       validateURL(post.url).map(_.toEitherNec),
       validatePublished(post.published).map(_.toEitherNec),
       validateLikes(post.likes).map(_.toEitherNec)
-      ).mapN(parCreatePostData)
+      ).mapN(parPostValidation)
 
   override def validateURL(url: String): F[Either[String, String]] =
     for {
