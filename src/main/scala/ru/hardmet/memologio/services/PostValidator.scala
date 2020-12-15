@@ -5,7 +5,7 @@ import cats.Monad
 import cats.data.EitherNec
 import cats.implicits._
 import domain.posts.Post
-import util.{DateParser, NonEmptyRule}
+import util.NonEmptyRule
 
 import java.net.URI
 import java.time.{LocalDate, LocalDateTime}
@@ -105,12 +105,6 @@ class PostValidatorInterpreter[F[_] : Monad : NonEmptyRule, PostId] extends Post
 }
 
 object PostValidator {
-
-  private val PublishedDatePattern: String = "yyyy-MM-dd"
-
-  private val PublishedDateTimePattern: String = "yyyy-MM-dd'T'HH:mm:ssZ"
-
-  val dateParser: DateParser = DateParser(PublishedDatePattern, PublishedDateTimePattern)
 
   def apply[F[_] : Monad : NonEmptyRule, PostId](): PostValidator[F, PostId] =
     new PostValidatorInterpreter[F, PostId]()

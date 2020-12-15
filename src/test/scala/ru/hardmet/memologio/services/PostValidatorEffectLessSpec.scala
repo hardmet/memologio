@@ -11,7 +11,6 @@ import scala.util.Try
 
 class PostValidatorEffectLessSpec extends BaseSpec {
 
-
   it should "parallel validate post" in {
     val validator = new PostValidatorEffectLess()
 

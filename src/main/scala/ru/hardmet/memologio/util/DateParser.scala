@@ -26,8 +26,6 @@ object DateParser {
   val DefaultLocalDateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(DefaultDatePattern)
   val DefaultLocalDateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
 
-  def apply(datePattern: String, dateTimePattern: String): DateParser = new DateParser(datePattern, dateTimePattern)
-
   def parseLocalDate(input: String): Either[String, LocalDate] =
     parseDateByFormatter(DefaultDatePattern, DefaultLocalDateFormatter)(input)
 

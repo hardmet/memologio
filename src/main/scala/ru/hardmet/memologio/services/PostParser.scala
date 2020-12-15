@@ -1,11 +1,11 @@
 package ru.hardmet.memologio
 package services
 
-import java.time.{LocalDate, LocalDateTime}
-
 import cats.Monad
 import cats.implicits._
 import util.{NonEmptyRuleInterpreter, Parse}
+
+import java.time.{LocalDate, LocalDateTime}
 
 trait PostParser[F[_], PostId] extends NonEmptyRuleInterpreter[F] {
 
