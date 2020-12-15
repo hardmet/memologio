@@ -6,7 +6,7 @@ import cats.implicits._
 import ru.hardmet.memologio.domain.posts.Post
 
 import java.net.URI
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 import scala.util.Try
 
 class PostValidatorEffectLessSpec extends BaseSpec {
@@ -73,6 +73,37 @@ class PostValidatorEffectLessSpec extends BaseSpec {
     forAll { (published: LocalDateTime) =>
       whenever(published.isAfter(LocalDateTime.now())) {
         validator.isValidPublished(published) shouldBe Left("Published date can't be after processing time")
+      }
+    }
+  }
+
+  it should "validate published date" in {
+    val validator = new PostValidatorEffectLess()
+
+    forAll { (published: LocalDate) =>
+      whenever(published.isBefore(LocalDate.now())) {
+        validator.isValidPublishedDate(published) shouldBe Right(published)
+      }
+    }
+
+    forAll { (published: LocalDate) =>
+      whenever(published.isAfter(LocalDate.now())) {
+        validator.isValidPublishedDate(published) shouldBe Left("Published date can't be after processing date")
+      }
+    }
+  }
+
+  it should "validate likes" in {
+    val validator = new PostValidatorEffectLess()
+    forAll { (likes: Int) =>
+      whenever(likes >= 0) {
+        validator.isValidLikes(likes) shouldBe Right(likes)
+      }
+    }
+
+    forAll { (likes: Int) =>
+      whenever(likes < 0) {
+        validator.isValidLikes(likes) shouldBe Left(s"likes: $likes should be more or equals to zero")
       }
     }
   }

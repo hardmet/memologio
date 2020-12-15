@@ -4,7 +4,7 @@ import cats.data.{EitherNec, NonEmptyChain}
 import org.scalacheck.{Arbitrary, Gen}
 import tofu.logging.Loggable
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 
 package object services {
 
@@ -25,6 +25,16 @@ package object services {
           calendar.toInstant,
           calendar.getTimeZone.toZoneId
         )
+      }
+    }
+
+  final implicit val arbitraryForLD: Arbitrary[LocalDate] =
+    Arbitrary {
+      Gen.calendar.map { calendar =>
+        LocalDateTime.ofInstant(
+          calendar.toInstant,
+          calendar.getTimeZone.toZoneId
+        ).toLocalDate
       }
     }
 
@@ -49,9 +59,6 @@ package object services {
       } yield InvalidURI(s"$invalidChar$protocol://$domain.$tld/$path")
     }
 
-  implicit val unitLoggable: Loggable[Unit] = Loggable[String].contramap(_ => "()")
-
-
   implicit val PostDataArbitrary: Arbitrary[PostData] =
     Arbitrary {
       for {
@@ -71,5 +78,15 @@ package object services {
         )
       } yield PostData(url, published, likes)
     }
+
+  implicit val likesArbitrary: Arbitrary[Int] = Arbitrary {
+    for {
+      positiveInt <- Gen.size
+      negativeInt <- Gen.size.map(x => -x)
+      likes <- Gen.oneOf(positiveInt, negativeInt)
+    } yield likes
+  }
+
+  implicit val unitLoggable: Loggable[Unit] = Loggable[String].contramap(_ => "()")
 
 }
