@@ -4,7 +4,8 @@ import cats.data.{EitherNec, NonEmptyChain}
 import org.scalacheck.{Arbitrary, Gen}
 import tofu.logging.Loggable
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDate, LocalDateTime, ZoneId}
+import java.util.UUID
 
 package object services {
 
@@ -14,17 +15,21 @@ package object services {
 
   case class InvalidURI(override val value: String) extends TestURI(value)
 
+  case class InvalidUUID(value: String)
+
   case class PostData(url: EitherNec[String, String],
                       published: EitherNec[String, LocalDateTime],
                       likes: EitherNec[String, Int])
 
+  lazy val invalidCharGen: Gen[String] = Gen.oneOf("[", "]", "{", "}", "|", "(", ")")
+
   final implicit val arbitraryForLDT: Arbitrary[LocalDateTime] =
     Arbitrary {
       Gen.calendar.map { calendar =>
-        LocalDateTime.ofInstant(
-          calendar.toInstant,
-          calendar.getTimeZone.toZoneId
-        )
+        calendar
+          .toInstant
+          .atZone(ZoneId.systemDefault())
+          .toLocalDateTime
       }
     }
 
@@ -51,7 +56,7 @@ package object services {
   final implicit val InvalidURIArbitrary: Arbitrary[InvalidURI] =
     Arbitrary {
       for {
-        invalidChar <- Gen.oneOf("[", "]", "{", "}", "|", "(", ")")
+        invalidChar <- invalidCharGen
         protocol <- Gen.oneOf("http", "https", "ftp", "file")
         domain <- Gen.alphaNumStr
         tld <- Gen.oneOf("com", "io")
@@ -85,6 +90,26 @@ package object services {
       negativeInt <- Gen.size.map(x => -x)
       likes <- Gen.oneOf(positiveInt, negativeInt)
     } yield likes
+  }
+
+  implicit val uuidArbitrary: Arbitrary[UUID] = Arbitrary {
+    Gen.delay(UUID.randomUUID)
+  }
+
+  // TODO: add null check case
+  implicit val invalidUUIDArbitrary: Arbitrary[InvalidUUID] = Arbitrary {
+    for {
+      uuid <- uuidArbitrary.arbitrary
+      invalidChar <- invalidCharGen
+      strUUID = uuid.toString
+      invalidUUIDStr <- Gen.oneOf(
+        strUUID.replace("-", invalidChar),
+        s"$strUUID$invalidChar",
+        s"$invalidChar$strUUID",
+        ""
+      )
+      invalidUUID = InvalidUUID(invalidUUIDStr)
+    } yield invalidUUID
   }
 
   implicit val unitLoggable: Loggable[Unit] = Loggable[String].contramap(_ => "()")
