@@ -6,25 +6,13 @@ import java.time.{LocalDate, LocalDateTime}
 
 import cats.syntax.all._
 
-class DateParser(val datePattern: String, val dateTimePattern: String) {
-
-  val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(dateTimePattern)
-  val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(dateTimePattern)
-
-  def parseLocalDate(input: String): Either[String, LocalDate] =
-    DateParser.parseDateByFormatter(datePattern, dateFormatter)(input)
-
-  def parseLocalDateTime(input: String): Either[String, LocalDateTime] =
-    DateParser.parseDateTimeByFormatter(dateTimePattern, dateTimeFormatter)(input)
-}
-
 object DateParser {
 
   val DefaultDatePattern = "yyyy-MM-dd"
-  val DefaultDateTimePattern = "yyyy-MM-dd'T'HH:mm:ssZ"
+  val DefaultDateTimePattern = "yyyy-MM-dd'T'HH:mm:ss.SSS"
 
   val DefaultLocalDateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(DefaultDatePattern)
-  val DefaultLocalDateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
+  val DefaultLocalDateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(DefaultDateTimePattern)
 
   def parseLocalDate(input: String): Either[String, LocalDate] =
     parseDateByFormatter(DefaultDatePattern, DefaultLocalDateFormatter)(input)
