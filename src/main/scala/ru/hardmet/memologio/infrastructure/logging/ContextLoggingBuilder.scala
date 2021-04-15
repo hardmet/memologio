@@ -4,9 +4,9 @@ package logging
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
-
 import cats.effect.Clock
 import cats.{FlatMap, Functor}
+import ru.hardmet.memologio.infrastructure.logging.domain.ContextInfo
 import tofu.generate.GenUUID
 import tofu.syntax.monadic._
 import tofu.{Context, HasContext}

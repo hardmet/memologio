@@ -3,6 +3,7 @@ package infrastructure
 package logging
 
 import cats.effect.{Clock, Sync}
+import ru.hardmet.memologio.infrastructure.logging.domain.ContextInfo
 import tofu.HasContext
 import tofu.generate.GenUUID
 import tofu.logging.derivation.loggable.generate
