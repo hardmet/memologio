@@ -1,14 +1,14 @@
 package ru.hardmet.memologio
 package util
 
-import cats.Monad
-import cats.implicits._
+import cats.Applicative
+import cats.syntax.applicative._
 
 trait NonEmptyRule[F[_]] {
   def nonEmptyRun(s: String)(fieldName: String): F[Either[String, String]]
 }
 
-class NonEmptyRuleInterpreter[F[_] : Monad] extends NonEmptyRule[F] {
+class NonEmptyRuleInterpreter[F[_] : Applicative] extends NonEmptyRule[F] {
 
   override def nonEmptyRun(s: String)(fieldName: String): F[Either[String, String]] =
     nonEmpty(s)(fieldName)
@@ -21,6 +21,5 @@ class NonEmptyRuleInterpreter[F[_] : Monad] extends NonEmptyRule[F] {
 }
 
 object NonEmptyRule {
-  implicit def nonEmptyRule[F[_] : Monad]: NonEmptyRule[F] = new NonEmptyRuleInterpreter[F]
-
+  implicit def nonEmptyRule[F[_] : Applicative]: NonEmptyRule[F] = new NonEmptyRuleInterpreter[F]
 }

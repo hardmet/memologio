@@ -10,8 +10,8 @@ import tofu.logging.{Loggable, LoggableContext, Logging, Logs}
 
 import scala.reflect.ClassTag
 
-class ContextLogging[F[_]: GenUUID: Sync: Clock] {
-  implicit val context: LoggableContext[F] { type Ctx = ContextInfo } = new LoggableContext[F] {
+class ContextLogging[F[_] : GenUUID : Sync : Clock] {
+  implicit val context: LoggableContext[F] {type Ctx = ContextInfo} = new LoggableContext[F] {
     override type Ctx = ContextInfo
 
     override implicit def loggable: Loggable[ContextInfo] = generate[ContextInfo]

@@ -1,13 +1,15 @@
 package ru.hardmet.memologio
 package services
 
-import cats.Monad
-import cats.implicits._
+import cats.Applicative
+import cats.syntax.either._
+import cats.syntax.functor._
+import post.domain.PostId
 import util.{NonEmptyRuleInterpreter, Parse}
 
 import java.time.{LocalDate, LocalDateTime}
 
-trait PostParser[F[_], PostId] extends NonEmptyRuleInterpreter[F] {
+trait PostParser[F[_]] extends NonEmptyRuleInterpreter[F] {
 
   def parseId(id: String): F[Either[String, PostId]]
 
@@ -17,10 +19,10 @@ trait PostParser[F[_], PostId] extends NonEmptyRuleInterpreter[F] {
 
 }
 
-class PostParserInterpreter[F[_] : Monad, PostId](implicit parsePostId: Parse[String, PostId],
-                                                  parseLocalDate: Parse[String, LocalDate],
-                                                  parseLocalDateTime: Parse[String, LocalDateTime])
-  extends PostParser[F, PostId] {
+class PostParserInterpreter[F[_] : Applicative](implicit parsePostId: Parse[String, PostId],
+                                                parseLocalDate: Parse[String, LocalDate],
+                                                parseLocalDateTime: Parse[String, LocalDateTime])
+  extends PostParser[F] {
 
   override def parseId(id: String): F[Either[String, PostId]] =
     parseWithNonEmpty(id)("postId")(parsePostId)
@@ -51,7 +53,7 @@ class PostParserInterpreter[F[_] : Monad, PostId](implicit parsePostId: Parse[St
 }
 
 object PostParser {
-  def apply[F[_] : Monad, PostId](implicit parsePostId: Parse[String, PostId],
-                                  parseLocalDateTime: Parse[String, LocalDateTime]): PostParser[F, PostId] =
-    new PostParserInterpreter[F, PostId]()
+  def apply[F[_] : Applicative](implicit parsePostId: Parse[String, PostId],
+                                parseLocalDateTime: Parse[String, LocalDateTime]): PostParser[F] =
+    new PostParserInterpreter[F]()
 }

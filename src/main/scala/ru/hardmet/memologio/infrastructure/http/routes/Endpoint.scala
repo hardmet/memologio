@@ -8,7 +8,7 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.{HttpRoutes, Request, Response}
 import services.Service
 
-abstract class Endpoint[F[_]: Defer: Applicative] extends Http4sDsl[F] {
+abstract class Endpoint[F[_] : Defer : Applicative] extends Http4sDsl[F] {
 
   val service: Service[F]
 

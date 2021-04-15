@@ -55,7 +55,7 @@ override val dbConnector: DBConnector[F, UUID] = new SkunkConnector[F]()
 Инициализация БД:
   1. установить docker клиент
   2. развернуть образ с базой данных, командой `docker-compose up -d` из корня проекта
-  3. подключиться к БД любым клиентом, используя строку подключения: `jdbc:postgresql://localhost:54320/postgress`  username/password: example
+  3. подключиться к БД любым клиентом, используя строку подключения: `jdbc:postgresql://localhost:54320/postgres`  username/password: example
   4. создать БД для нужд проекта командой в клиенте: `create database memologio; commit;`
   5. подключиться к БД `memologio` клиентом по адресу `jdbc:postgresql://localhost:54320/memologio` username/password: `example` и выполнить команды из скрипта `src/main/resources/db_initialization.sql`
 

@@ -1,24 +1,29 @@
 package ru.hardmet.memologio
 package services
 
-import cats.Monad
+import cats.Applicative
 import cats.data.EitherNec
-import cats.implicits._
-import domain.posts.Post
+import cats.syntax.applicative._
+import cats.syntax.apply._
+import cats.syntax.either._
+import cats.syntax.functor._
+import cats.syntax.parallel._
+import cats.syntax.traverse._
+import post.domain.{Data, Url}
 import util.NonEmptyRule
 
 import java.net.URI
 import java.time.{LocalDate, LocalDateTime}
 
 
-trait PostValidator[F[_], PostId] {
+trait PostValidator[F[_]] {
 
   def validatePostWithUnreliablyPublished(url: String, likes: Int)
-                                         (published: Either[String, LocalDateTime]): F[EitherNec[String, Post.Data]]
+                                         (published: Either[String, LocalDateTime]): F[EitherNec[String, Data]]
 
-  def validatePost(post: Post.Data): F[EitherNec[String, Post.Data]]
+  def validatePost(post: Data): F[EitherNec[String, Data]]
 
-  def validateURL(url: String): F[Either[String, String]]
+  def validateURL(url: String): F[Either[String, Url]]
 
   def validatePublished(published: LocalDateTime): F[Either[String, LocalDateTime]]
 
@@ -31,12 +36,12 @@ trait PostValidator[F[_], PostId] {
 
 class PostValidatorEffectLess {
 
-  private[services] def parPostValidation(errorNecOrURL: EitherNec[String, String],
+  private[services] def parPostValidation(errorNecOrURL: EitherNec[String, Url],
                                           errorNecOrPublished: EitherNec[String, LocalDateTime],
-                                          errorNecOrLikes: EitherNec[String, Int]): EitherNec[String, Post.Data] =
+                                          errorNecOrLikes: EitherNec[String, Int]): EitherNec[String, Data] =
     (errorNecOrURL, errorNecOrPublished, errorNecOrLikes)
       .parTupled
-      .map(Function.tupled(Post.Data.apply))
+      .map(Function.tupled(Data.apply))
 
   private[services] def isValidURI(nonEmptyURI: String): Either[String, String] =
     Either
@@ -58,32 +63,38 @@ class PostValidatorEffectLess {
       .filterOrElse(_ >= 0, s"likes: $likes should be more or equals to zero")
 }
 
-class PostValidatorInterpreter[F[_] : Monad : NonEmptyRule, PostId] extends PostValidatorEffectLess
-  with PostValidator[F, PostId] {
+class PostValidatorInterpreter[F[_] : Applicative : NonEmptyRule] extends PostValidatorEffectLess
+  with PostValidator[F] {
 
   override def validatePostWithUnreliablyPublished(url: String, likes: Int)
-                                                  (published: Either[String, LocalDateTime]): F[EitherNec[String, Post.Data]] =
+                                                  (published: Either[String, LocalDateTime]): F[EitherNec[String, Data]] =
     (
       validateURL(url).map(_.toEitherNec),
       published.flatTraverse(validatePublished).map(_.toEitherNec),
       validateLikes(likes).map(_.toEitherNec)
       ).mapN(parPostValidation)
 
-  override def validatePost(post: Post.Data): F[EitherNec[String, Post.Data]] =
+  override def validatePost(post: Data): F[EitherNec[String, Data]] =
     (
       validateURL(post.url).map(_.toEitherNec),
       validatePublished(post.published).map(_.toEitherNec),
       validateLikes(post.likes).map(_.toEitherNec)
       ).mapN(parPostValidation)
 
-  override def validateURL(url: String): F[Either[String, String]] =
+  def validateURL(url: Url): F[Either[String, Url]] =
+    validateURL(url.value)
+
+  override def validateURL(url: String): F[Either[String, Url]] =
     for {
       errorOrNonEmptyURI <- F.nonEmptyRun(url.trim)("url")
-      errorOrValidURL = for {
-        nonEmptyURL <- errorOrNonEmptyURI
-        errorOrValidURL <- isValidURI(nonEmptyURL)
-      } yield errorOrValidURL
-    } yield errorOrValidURL
+      errorOrValidURL = validateNonEmptyURL(errorOrNonEmptyURI)
+      validUrl = errorOrValidURL.map(Url(_))
+    } yield validUrl
+
+  private def validateNonEmptyURL(urlOrError: Either[String, String]): Either[String, String] = for {
+    nonEmptyURL <- urlOrError
+    errorOrValidURL <- isValidURI(nonEmptyURL)
+  } yield errorOrValidURL
 
   def validatePublished(published: LocalDateTime): F[Either[String, LocalDateTime]] =
     isValidPublished(published)
@@ -106,7 +117,7 @@ class PostValidatorInterpreter[F[_] : Monad : NonEmptyRule, PostId] extends Post
 
 object PostValidator {
 
-  def apply[F[_] : Monad : NonEmptyRule, PostId](): PostValidator[F, PostId] =
-    new PostValidatorInterpreter[F, PostId]()
+  def apply[F[_] : Applicative : NonEmptyRule](): PostValidator[F] =
+    new PostValidatorInterpreter[F]()
 
 }

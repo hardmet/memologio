@@ -4,7 +4,7 @@ package util
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime}
 
-import cats.syntax.all._
+import cats.syntax.either._
 
 object DateParser {
 

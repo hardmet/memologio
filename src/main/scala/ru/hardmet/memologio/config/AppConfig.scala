@@ -10,6 +10,6 @@ import pureconfig.ConfigSource
 case class AppConfig(server: ServerConfig, db: DBConfig)
 
 object AppConfig {
-  def init[F[_]: Sync: ContextShift]: F[AppConfig] =
+  def init[F[_] : Sync : ContextShift]: F[AppConfig] =
     F.delay(ConfigSource.default.loadOrThrow[AppConfig])
 }

@@ -18,18 +18,18 @@ trait ContextInfoBuilder[F[_]] {
   def buildContext: HasContext[F, ContextInfo]
 }
 
-class ContextInfoBuilderInterpreter[F[_]: GenUUID: FlatMap: Clock] extends ContextInfoBuilder[F] {
+class ContextInfoBuilderInterpreter[F[_] : GenUUID : FlatMap : Clock] extends ContextInfoBuilder[F] {
 
   override def buildInfo: F[ContextInfo] =
     for {
-      traceId     <- GenUUID.random[F]
+      traceId <- GenUUID.random[F]
       startTimeMS <- Clock[F].realTime(TimeUnit.MILLISECONDS)
     } yield ContextInfo(
       traceId = traceId,
       startTime = Instant.ofEpochMilli(startTimeMS),
     )
 
-  override def buildContext: Context[F] { type Ctx = ContextInfo } = new Context[F] {
+  override def buildContext: Context[F] {type Ctx = ContextInfo} = new Context[F] {
     override def functor: Functor[F] = Functor[F]
 
     override type Ctx = ContextInfo

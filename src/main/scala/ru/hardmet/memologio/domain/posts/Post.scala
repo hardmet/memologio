@@ -56,4 +56,3 @@ object Post {
   }
 }
 
-final case class PostId(uuid: UUID)

@@ -2,57 +2,59 @@ package ru.hardmet.memologio
 package infrastructure
 package repository.skunk
 
-import java.time.{LocalDate, LocalDateTime}
-import java.util.UUID
-
+import SkunkPostRepositoryInterpreter.ChunkSizeInBytes
 import cats.effect.{Resource, Sync}
-import cats.syntax.all._
+import cats.syntax.functor._
 import repository.PostRepository
-import skunk.{Codec, Command, Fragment, Query, Void, ~}
+import ru.hardmet.memologio.services.post.domain.PostId.postId
+import ru.hardmet.memologio.services.post.domain.Url.url
+import services.post.domain._
 import skunk.codec.all._
 import skunk.implicits._
-import domain.posts.Post
-import SkunkPostRepositoryInterpreter.ChunkSizeInBytes
+import skunk.{Codec, Command, Fragment, Query, Void, ~}
 
-class SkunkPostRepositoryInterpreter[F[_]: Sync](val sessionResource: Resource[F, skunk.Session[F]]) extends PostRepository[F, UUID] {
+import java.time.{LocalDate, LocalDateTime}
+
+class SkunkPostRepositoryInterpreter[F[_] : Sync](val sessionResource: Resource[F, skunk.Session[F]]) extends PostRepository[F] {
+
   import PostStatements._
 
-  override def create(post: Post.Data): F[Post.Existing[UUID]] =
+  override def create(post: Data): F[Existing] =
     prepareAndQuery(Insert.one, post)
 
-  override def update(post: Post.Existing[UUID]): F[Post.Existing[UUID]] =
+  override def update(post: Existing): F[Existing] =
     prepareAndQuery(Update.one, post)
 
-  override def get(id: UUID): F[Option[Post.Existing[UUID]]] =
+  override def get(id: PostId): F[Option[Existing]] =
     prepareQueryAndCompile(Select.one, id)
       .map(_.headOption)
 
-  override def getListByIds(ids: Vector[UUID]): F[Vector[Post.Existing[UUID]]] =
+  override def getListByIds(ids: Vector[PostId]): F[Vector[Existing]] =
     prepareQueryAndCompile(Select.many(ids.size), ids.to(List))
 
-  override def findByPublishedDate(published: LocalDate): F[Vector[Post.Existing[UUID]]] =
+  override def findByPublishedDate(published: LocalDate): F[Vector[Existing]] =
     prepareQueryAndCompile(Select.byPublishedDate, published)
 
-  override def findByPublishedDateTime(published: LocalDateTime): F[Vector[Post.Existing[UUID]]] =
+  override def findByPublishedDateTime(published: LocalDateTime): F[Vector[Existing]] =
     prepareQueryAndCompile(Select.byPublishedDateTime, published)
 
-  override def findWithLikesAbove(likes: Int): F[Vector[Post.Existing[UUID]]] =
+  override def findWithLikesAbove(likes: Int): F[Vector[Existing]] =
     prepareQueryAndCompile(Select.withLikesAbove, likes)
 
-  override def findWithLikesBelow(likes: Int): F[Vector[Post.Existing[UUID]]] =
+  override def findWithLikesBelow(likes: Int): F[Vector[Existing]] =
     prepareQueryAndCompile(Select.withLikesBelow, likes)
 
-  override def list(pageSize: Int, offset: Int): F[Vector[Post.Existing[UUID]]] =
+  override def list(pageSize: Int, offset: Int): F[Vector[Existing]] =
     prepareQueryAndCompile(Select.allWithPagination, pageSize -> offset)
 
-  override def listAll(): F[Vector[Post.Existing[UUID]]] =
+  override def listAll(): F[Vector[Existing]] =
     sessionResource.use { session =>
       session
         .execute(Select.all)
         .map(_.to(Vector))
     }
 
-  override def delete(id: UUID): F[Unit] =
+  override def delete(id: PostId): F[Unit] =
     sessionResource.use { session =>
       session
         .prepare(Delete.one)
@@ -64,8 +66,8 @@ class SkunkPostRepositoryInterpreter[F[_]: Sync](val sessionResource: Resource[F
     }
 
 
-  override def deleteMany(posts: Vector[Post.Existing[UUID]]): F[Unit] =
-    sessionResource.use{ session =>
+  override def deleteMany(posts: Vector[Existing]): F[Unit] =
+    sessionResource.use { session =>
       session
         .prepare(Delete.many(posts.size))
         .use { preparedCommand =>
@@ -105,38 +107,36 @@ class SkunkPostRepositoryInterpreter[F[_]: Sync](val sessionResource: Resource[F
 }
 
 object SkunkPostRepositoryInterpreter {
-  private [skunk] val ChunkSizeInBytes: Int = 1024
+  private[skunk] val ChunkSizeInBytes: Int = 1024
 }
 
 object PostStatements {
 
-  val UrlCodec: Codec[String] = varchar(512)
-
-  final implicit private class PostDataCompanionOps(private val data: Post.Data.type) {
-    val codec: Codec[Post.Data] =
-      (UrlCodec ~ timestamp ~ int4).gimap[Post.Data]
+  final implicit private class PostDataCompanionOps(private val data: Data.type) {
+    val codec: Codec[Data] =
+      (url ~ timestamp ~ int4).gimap[Data]
   }
 
-  final implicit private class PostExistingCompanionOps(private val existing: Post.Existing.type) {
-    val codec: Codec[Post.Existing[UUID]] =
-      (uuid ~ Post.Data.codec).gimap[Post.Existing[UUID]]
+  final implicit private class PostExistingCompanionOps(private val existing: Existing.type) {
+    val codec: Codec[Existing] =
+      (postId ~ Data.codec).gimap[Existing]
   }
 
   object Insert {
-    val one: Query[Post.Data, Post.Existing[UUID]] =
+    val one: Query[Data, Existing] =
       sql"""
                INSERT INTO post (url, published, likes)
-               VALUES (${Post.Data.codec})
+               VALUES (${Data.codec})
             RETURNING *
-         """.query(Post.Existing.codec)
+         """.query(Existing.codec)
 
     // TODO use or remove
-    def many(size: Int): Query[List[Post.Data], Post.Existing[UUID]] =
+    def many(size: Int): Query[List[Data], Existing] =
       sql"""
                INSERT INTO post (url, published, likes)
-               VALUES (${Post.Data.codec.list(size)})
+               VALUES (${Data.codec.list(size)})
             RETURNING *
-         """.query(Post.Existing.codec)
+         """.query(Existing.codec)
   }
 
   object Select {
@@ -147,83 +147,83 @@ object PostStatements {
               ORDER BY published DESC
          """
 
-    val allWithPagination: Query[(Int, Int), Post.Existing[UUID]] =
-      PaginationQuery.paginate(Select.allFragment)(Post.Existing.codec)
+    val allWithPagination: Query[(Int, Int), Existing] =
+      PaginationQuery.paginate(Select.allFragment)(Existing.codec)
 
-    val all: Query[Void, Post.Existing[UUID]] = allFragment.query(Post.Existing.codec)
+    val all: Query[Void, Existing] = allFragment.query(Existing.codec)
 
-    val one: Query[UUID, Post.Existing[UUID]] =
+    val one: Query[PostId, Existing] =
       sql"""
             SELECT *
               FROM post
-             WHERE id = $uuid
-         """.query(Post.Existing.codec)
+             WHERE id = $postId
+         """.query(Existing.codec)
 
 
-    def many(size: Int): Query[List[UUID], Post.Existing[UUID]] =
+    def many(size: Int): Query[List[PostId], Existing] =
       sql"""
             SELECT *
               FROM post
-             WHERE id IN (${uuid.list(size)})
-         """.query(Post.Existing.codec)
+             WHERE id IN (${postId.list(size)})
+         """.query(Existing.codec)
 
-    val byPublishedDate: Query[LocalDate, Post.Existing[UUID]] =
+    val byPublishedDate: Query[LocalDate, Existing] =
       sql"""
             SELECT *
               FROM post
              WHERE published::date = $date
-         """.query(Post.Existing.codec)
+         """.query(Existing.codec)
 
-    val byPublishedDateTime: Query[LocalDateTime, Post.Existing[UUID]] =
+    val byPublishedDateTime: Query[LocalDateTime, Existing] =
       sql"""
             SELECT *
               FROM post
              WHERE published = $timestamp
-         """.query(Post.Existing.codec)
+         """.query(Existing.codec)
 
     // TODO write route for this functionality
-    val withLikesAbove: Query[Int, Post.Existing[UUID]] =
+    val withLikesAbove: Query[Int, Existing] =
       sql"""
             SELECT *
               FROM post
              WHERE likes > $int4
-         """.query(Post.Existing.codec)
+         """.query(Existing.codec)
 
-    val withLikesBelow: Query[Int, Post.Existing[UUID]] =
+    val withLikesBelow: Query[Int, Existing] =
       sql"""
             SELECT *
               FROM post
              WHERE likes < $int4
-         """.query(Post.Existing.codec)
+         """.query(Existing.codec)
   }
 
   object Update {
-    val one: Query[Post.Existing[UUID], Post.Existing[UUID]] =
+    val one: Query[Existing, Existing] =
       sql"""
                UPDATE post
-                  SET url = $UrlCodec, published = $timestamp, likes = $int4
-                WHERE id = $uuid
+                  SET url = $url, published = $timestamp, likes = $int4
+                WHERE id = $postId
             RETURNING *
-         """.query(Post.Existing.codec).contramap(toTwiddle)
+         """.query(Existing.codec).contramap(toTwiddle)
 
-    private def toTwiddle(post: Post.Existing[UUID]): String ~ LocalDateTime ~ Int ~ UUID =
+    private def toTwiddle(post: Existing): Url ~ LocalDateTime ~ Int ~ PostId =
       post.data.url ~ post.data.published ~ post.data.likes ~ post.id
   }
 
   object Delete {
 
-    def one: Command[UUID] =
+    def one: Command[PostId] =
       sql"""
             DELETE
               FROM post
-             WHERE id = $uuid
+             WHERE id = $postId
          """.command
 
-    def many(size: Int): Command[List[UUID]] =
+    def many(size: Int): Command[List[PostId]] =
       sql"""
             DELETE
               FROM post
-             WHERE id IN (${uuid.list(size)})
+             WHERE id IN (${postId.list(size)})
          """.command
 
     val all: Command[Void] =

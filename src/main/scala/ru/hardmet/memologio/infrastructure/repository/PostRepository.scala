@@ -2,33 +2,35 @@ package ru.hardmet.memologio
 package infrastructure
 package repository
 
+import services.post.domain.{Data, Existing, PostId}
+
 import java.time.{LocalDate, LocalDateTime}
 
-import ru.hardmet.memologio.domain.posts.Post
+trait PostRepository[F[_]] {
 
-trait PostRepository[F[_], PostId] {
+  def create(post: Data): F[Existing]
 
-  def create(post: Post.Data): F[Post.Existing[PostId]]
+  def update(post: Existing): F[Existing]
 
-  def update(post: Post.Existing[PostId]): F[Post.Existing[PostId]]
+  def get(id: PostId): F[Option[Existing]]
 
-  def get(id: PostId): F[Option[Post.Existing[PostId]]]
+  def getListByIds(ids: Vector[PostId]): F[Vector[Existing]]
 
-  def getListByIds(ids: Vector[PostId]): F[Vector[Post.Existing[PostId]]]
+  def findByPublishedDate(published: LocalDate): F[Vector[Existing]]
 
-  def findByPublishedDate(published: LocalDate): F[Vector[Post.Existing[PostId]]]
+  def findByPublishedDateTime(published: LocalDateTime): F[Vector[Existing]]
 
-  def findByPublishedDateTime(published: LocalDateTime): F[Vector[Post.Existing[PostId]]]
+  def findWithLikesAbove(likes: Int): F[Vector[Existing]]
 
-  def findWithLikesAbove(likes: Int): F[Vector[Post.Existing[PostId]]]
+  def findWithLikesBelow(likes: Int): F[Vector[Existing]]
 
-  def findWithLikesBelow(likes: Int): F[Vector[Post.Existing[PostId]]]
+  def list(pageSize: Int, offset: Int): F[Vector[Existing]]
 
-  def list(pageSize: Int, offset: Int): F[Vector[Post.Existing[PostId]]]
-
-  def listAll(): F[Vector[Post.Existing[PostId]]]
+  def listAll(): F[Vector[Existing]]
 
   def delete(id: PostId): F[Unit]
-  def deleteMany(posts: Vector[Post.Existing[PostId]]): F[Unit]
+
+  def deleteMany(posts: Vector[Existing]): F[Unit]
+
   def deleteAll(): F[Unit]
 }

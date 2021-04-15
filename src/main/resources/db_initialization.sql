@@ -1,6 +1,3 @@
-create database memologio;
-commit;
-
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 create table post(
     id uuid default uuid_generate_v4() not null primary key,

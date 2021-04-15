@@ -19,8 +19,8 @@ trait HttpServer[F[_]] {
 
 object HttpServer {
   private def createServer[F[_] : ConcurrentEffect : Timer](executionContext: ExecutionContext)
-                                                                         (config: ServerConfig)
-                                                                         (httpApp: HttpApp[F]): HttpServer[F] =
+                                                           (config: ServerConfig)
+                                                           (httpApp: HttpApp[F]): HttpServer[F] =
     new HttpServer[F] {
       override def serve: F[Unit] =
         BlazeServerBuilder(executionContext)
@@ -32,8 +32,8 @@ object HttpServer {
     }
 
   def create[F[_] : ConcurrentEffect : Timer](executionContext: ExecutionContext)
-                                                           (config: ServerConfig)
-                                                           (routes: HttpRoutes[F]*): F[HttpServer[F]] =
+                                             (config: ServerConfig)
+                                             (routes: HttpRoutes[F]*): F[HttpServer[F]] =
     F.delay(
       createServer(executionContext)(config)(
         Logger.httpApp(logHeaders = true, logBody = true)(

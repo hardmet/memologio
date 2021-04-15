@@ -2,8 +2,9 @@ package ru.hardmet.memologio
 package services
 
 import cats.data.NonEmptyChain
-import cats.implicits._
-import ru.hardmet.memologio.domain.posts.Post
+import cats.data.NonEmptyChain._
+import cats.syntax.foldable._
+import services.post.domain.Data
 
 import java.net.URI
 import java.time.{LocalDate, LocalDateTime}
@@ -18,7 +19,7 @@ class PostValidatorEffectLessSpec extends BaseSpec {
       val expected = (postData.url, postData.published, postData.likes) match {
         // valid post way
         case (Right(url), Right(published), Right(likes)) =>
-          Right[NonEmptyChain[String], Post.Data](Post.Data(url, published, likes))
+          Right[NonEmptyChain[String], Data](Data(url, published, likes))
         // errors way
         case _ =>
           val head +: tail = Seq(postData.url, postData.published, postData.likes)
@@ -27,7 +28,7 @@ class PostValidatorEffectLessSpec extends BaseSpec {
               _ => List.empty[String])
             )
             .reduce(_ ++ _)
-          Left[NonEmptyChain[String], Post.Data](
+          Left[NonEmptyChain[String], Data](
             NonEmptyChain(head, tail: _*)
           )
       }

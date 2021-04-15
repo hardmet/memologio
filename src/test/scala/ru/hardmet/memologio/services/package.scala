@@ -2,6 +2,7 @@ package ru.hardmet.memologio
 
 import cats.data.{EitherNec, NonEmptyChain}
 import org.scalacheck.{Arbitrary, Gen}
+import services.post.domain.{PostId, Url}
 import tofu.logging.Loggable
 
 import java.time.{LocalDate, LocalDateTime, ZoneId}
@@ -17,7 +18,7 @@ package object services {
 
   case class InvalidUUID(value: String)
 
-  case class PostData(url: EitherNec[String, String],
+  case class PostData(url: EitherNec[String, Url],
                       published: EitherNec[String, LocalDateTime],
                       likes: EitherNec[String, Int])
 
@@ -69,10 +70,11 @@ package object services {
       for {
         validURI <- ValidURIArbitrary.arbitrary
         invalidURI <- InvalidURIArbitrary.arbitrary
-        url <- Gen.oneOf(
+        rawUrl <- Gen.oneOf(
           Right[NonEmptyChain[String], String](validURI.value),
           Left[NonEmptyChain[String], String](NonEmptyChain(s"invalid url ${invalidURI.value}"))
         )
+        url = rawUrl.map(Url(_))
         published <- Gen.oneOf(
           Right[NonEmptyChain[String], LocalDateTime](LocalDateTime.now()),
           Left[NonEmptyChain[String], LocalDateTime](NonEmptyChain(s"published is empty", "published is wrong"))
@@ -94,6 +96,10 @@ package object services {
 
   implicit val uuidArbitrary: Arbitrary[UUID] = Arbitrary {
     Gen.delay(UUID.randomUUID)
+  }
+
+  implicit val postIdArbitrary: Arbitrary[PostId] = Arbitrary {
+    uuidArbitrary.arbitrary.map(PostId(_))
   }
 
   // TODO: add null check case
