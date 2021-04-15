@@ -12,7 +12,7 @@ import io.circe.syntax._
 import org.http4s._
 import org.http4s.circe._
 import org.http4s.headers.Location
-import services.PostService
+import services.post.PostService
 import services.post.domain.Existing
 
 import java.time.format.DateTimeFormatter

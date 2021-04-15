@@ -8,7 +8,7 @@ import infrastructure.logging.ContextLogging
 import infrastructure.repository.DBConnector
 import infrastructure.repository.doobie.DoobieConnector
 import natchez.Trace.Implicits.noop
-import services.{PostParser, PostService, PostServiceInterpreter, PostValidator}
+import services.post.{PostParser, PostService, PostServiceInterpreter, PostValidator}
 
 import scala.concurrent.ExecutionContext
 

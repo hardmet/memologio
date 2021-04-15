@@ -1,8 +1,10 @@
 package ru.hardmet.memologio
 package services
+package post
 
 import cats.data.EitherNec
-import post.domain.{Existing, Url}
+import services.Service
+import ru.hardmet.memologio.services.post.domain.Existing
 
 trait PostService[F[_]] extends Service[F] {
 

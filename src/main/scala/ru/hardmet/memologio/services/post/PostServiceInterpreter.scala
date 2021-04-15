@@ -1,5 +1,6 @@
 package ru.hardmet.memologio
 package services
+package post
 
 import cats.Monad
 import cats.data.{EitherNec, NonEmptyChain}
@@ -10,7 +11,7 @@ import cats.syntax.functor._
 import cats.syntax.show._
 import cats.syntax.traverse._
 import infrastructure.repository.PostRepository
-import post.domain.{Data, Existing, Post, PostId, Url}
+import services.post.domain.{Data, Existing, Post, PostId}
 import tofu.logging.Logging
 import tofu.syntax.logging._
 
@@ -24,11 +25,11 @@ class PostServiceInterpreter[F[_] : Monad : Logging](parser: PostParser[F],
   override def createOne(url: String, published: String, likes: Int): F[EitherNec[String, Existing]] =
     for {
       _ <- debug"creating post url: $url, published: $published, likes: $likes"
-      errorsChainOrPostData <- parseAndValidatePost(url: String, published: String, likes: Int)
+      errorsChainOrPostData <- parseAndValidatePost(url, published, likes)
       post <- errorsChainOrPostData.traverse(repository.create)
       _ <- post.fold(
         errors => debug"post has not created, reasons: ${errors.show}",
-        p => debug"post $p created"
+        p => debug"post ${p.show} created"
       )
     } yield post
 

@@ -1,5 +1,6 @@
 package ru.hardmet.memologio
 package services
+package post
 
 import cats.Applicative
 import cats.data.EitherNec
@@ -9,7 +10,7 @@ import cats.syntax.either._
 import cats.syntax.functor._
 import cats.syntax.parallel._
 import cats.syntax.traverse._
-import post.domain.{Data, Url}
+import services.post.domain.{Data, Url}
 import util.NonEmptyRule
 
 import java.net.URI

@@ -1,14 +1,15 @@
 package ru.hardmet.memologio
+package services
 
 import cats.data.{EitherNec, NonEmptyChain}
 import org.scalacheck.{Arbitrary, Gen}
-import services.post.domain.{PostId, Url}
+import post.domain.{PostId, Url}
 import tofu.logging.Loggable
 
 import java.time.{LocalDate, LocalDateTime, ZoneId}
 import java.util.UUID
 
-package object services {
+package object post {
 
   class TestURI(val value: String)
 

@@ -1,10 +1,11 @@
 package ru.hardmet.memologio
 package services
+package post
 
 import cats.data.NonEmptyChain
 import cats.data.NonEmptyChain._
 import cats.syntax.foldable._
-import services.post.domain.Data
+import domain.Data
 
 import java.net.URI
 import java.time.{LocalDate, LocalDateTime}

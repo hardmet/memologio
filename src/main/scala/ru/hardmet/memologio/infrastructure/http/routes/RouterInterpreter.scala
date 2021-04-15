@@ -7,7 +7,7 @@ import cats.effect.Sync
 import infrastructure.http.routes.post.PostEndpoint
 import org.http4s.HttpRoutes
 import org.http4s.server.Router
-import services.PostService
+import services.post.PostService
 import services.post.domain.PostId
 import util.Parse
 

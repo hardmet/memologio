@@ -1,10 +1,11 @@
 package ru.hardmet.memologio
 package services
+package post
 
 import cats.Applicative
 import cats.syntax.either._
 import cats.syntax.functor._
-import post.domain.PostId
+import domain.PostId
 import util.{NonEmptyRuleInterpreter, Parse}
 
 import java.time.{LocalDate, LocalDateTime}

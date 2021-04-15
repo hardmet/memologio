@@ -1,9 +1,10 @@
 package ru.hardmet.memologio
 package util
 
+import cats.Show
+
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime}
-
 import cats.syntax.either._
 
 object DateParser {
@@ -13,6 +14,8 @@ object DateParser {
 
   val DefaultLocalDateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(DefaultDatePattern)
   val DefaultLocalDateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(DefaultDateTimePattern)
+
+  implicit val localDateTimeShow: Show[LocalDateTime] = (date: LocalDateTime) => date.format(DefaultLocalDateTimeFormatter)
 
   def parseLocalDate(input: String): Either[String, LocalDate] =
     parseDateByFormatter(DefaultDatePattern, DefaultLocalDateFormatter)(input)
@@ -35,5 +38,4 @@ object DateParser {
 
   private[util] def parsingErrorMessage(input: String, pattern: String) =
     s"input date: $input does not match the required format '$pattern'"
-
 }

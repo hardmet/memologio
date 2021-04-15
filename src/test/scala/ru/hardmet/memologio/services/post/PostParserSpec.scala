@@ -1,8 +1,9 @@
 package ru.hardmet.memologio
 package services
+package post
 
 import cats.effect.IO
-import post.domain.PostId
+import domain.PostId
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

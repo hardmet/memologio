@@ -12,7 +12,7 @@ POST {{endpoint}}
 
 {
   "url": "vk.com",
-  "published": "   2010-02-27T16:02",
+  "published": "   2010-02-27T16:02:01.706",
   "likes" : 0
 }
 
@@ -115,7 +115,7 @@ PUT {{endpoint}}/cb33d667-01ca-49c9-b22e-6df2ddd5a521
 GET {{endpoint}}/8f0c4bd7-a4fe-4a16-a14b-fcc1268788bd
 
 ### Seach by id (1 posts found)
-GET {{endpoint}}/120fc546-3cbb-4a22-b9c3-d47c5d6961bb
+GET {{endpoint}}/ace19bd6-6767-4364-aa17-e223820133ab
 
 ### Seach by id (invalid)
 GET {{endpoint}}/0fd02eb6-1378- 4b38-be71-a51bf550394f
@@ -124,10 +124,10 @@ GET {{endpoint}}/0fd02eb6-1378- 4b38-be71-a51bf550394f
 GET {{endpoint}}?url=script
 
 ### Seach by published date
-GET {{endpoint}}?published=2020-10-02
+GET {{endpoint}}?published=2010-02-27
 
 ### Seach by published date time
-GET {{endpoint}}?published=2020-10-02T02:51
+GET {{endpoint}}?published=2010-02-27T16:02:01.706
 
 ### Delete all
 DELETE {{endpoint}}
@@ -139,4 +139,4 @@ DELETE {{endpoint}}/8f0c4bd7-a4fe-4a16-a14b-fcc1268788bd
 DELETE {{endpoint}}/0fd02eb6-1378- 4b38-be71-a51bf550394f
 
 ### Delete (the one that works)
-DELETE {{endpoint}}/be8c063f-4392-460c-95fa-6815db240d13
+DELETE {{endpoint}}/ace19bd6-6767-4364-aa17-e223820133ab

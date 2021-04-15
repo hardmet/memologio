@@ -4,7 +4,6 @@ package repository.doobie
 
 import DoobiePagination._
 import cats.data._
-import cats.effect.Bracket
 import cats.syntax.functor._
 import doobie._
 import doobie.implicits._
@@ -14,12 +13,13 @@ import doobie.util.update.Update
 import fs2.Stream
 import repository.PostRepository
 import services.post.domain.{Data, Existing, PostId}
+import tofu.BracketThrow
 
 import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
 
 // TODO add update many just for fun
-class DoobiePostRepositoryInterpreter[F[_] : Bracket[*[_], Throwable]](val xa: Transactor[F])
+class DoobiePostRepositoryInterpreter[F[_] : BracketThrow](val xa: Transactor[F])
   extends PostRepository[F] {
 
   import Statements._

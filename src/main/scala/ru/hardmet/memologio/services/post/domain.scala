@@ -5,13 +5,14 @@ package post
 import cats.Show
 import cats.syntax.either._
 import derevo.derive
+import doobie.postgres.implicits._
 import doobie.{Get, Put}
 import io.estatico.newtype.macros.newtype
 import skunk.Codec
 import skunk.data._
 import tofu.logging.Loggable
-import tofu.logging.derivation.loggable
-import doobie.postgres.implicits._
+import tofu.logging.derivation.{loggable, show}
+import util.DateParser._
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -71,7 +72,7 @@ object domain {
   }
 
 
-  @derive(loggable)
+  @derive(loggable, show)
   final case class Existing(id: PostId, data: Data) extends Post {
     override protected type ThisType = Existing
 
@@ -89,7 +90,7 @@ object domain {
     override def withUpdatedLikes(newLikes: Int): ThisType = copy(data = data.withUpdatedLikes(newLikes))
   }
 
-  @derive(loggable)
+  @derive(loggable, show)
   final case class Data(url: Url, published: LocalDateTime, likes: Int = 0) extends Post {
     override protected type ThisType = Data
 
