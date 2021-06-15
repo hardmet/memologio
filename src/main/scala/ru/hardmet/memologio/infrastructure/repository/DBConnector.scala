@@ -3,7 +3,6 @@ package infrastructure
 package repository
 
 import cats.effect.Resource
-import cats.implicits.catsSyntaxOptionId
 import ru.hardmet.memologio.config.DBConfig
 
 trait DBConnector[F[_]] {

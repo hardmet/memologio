@@ -4,7 +4,7 @@ package repository.skunk
 
 import skunk.{Codec, Fragment, Query, Void}
 import skunk.codec.all.int4
-import skunk.implicits.toStringOps
+import skunk.implicits._
 
 /**
  * Pagination is a convenience to simply add limits and offsets to any query

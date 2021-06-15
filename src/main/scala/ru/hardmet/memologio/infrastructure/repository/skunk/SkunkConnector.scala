@@ -3,7 +3,7 @@ package infrastructure
 package repository.skunk
 
 import cats.effect.{Concurrent, ContextShift, Resource}
-import cats.implicits.catsSyntaxOptionId
+import cats.syntax.option._
 import config.DBConfig
 import repository.{DBConnector, PostRepository}
 import skunk.Session

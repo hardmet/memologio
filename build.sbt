@@ -16,7 +16,6 @@ scalacOptions := List(
   "-language:_",
   "-Ymacro-annotations"
 )
-bloopExportJarClassifiers in Global := Some(Set("sources"))
 
 val circeVersion = "0.12.1"
 val circeDerVersion = "0.12.0-M7"
@@ -71,7 +70,7 @@ libraryDependencies += "ch.qos.logback" % "logback-classic" % logbackVersion
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 libraryDependencies += "ru.tinkoff" %% "tofu-logging" % tofuVersion
 
-libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.8"
+libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.8" % Test
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % Test
 libraryDependencies += "org.typelevel" %% "discipline-scalatest" % "2.1.0" % Test
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.15.1" % Test

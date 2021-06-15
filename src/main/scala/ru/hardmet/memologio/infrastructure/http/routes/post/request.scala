@@ -6,7 +6,7 @@ package post
 
 import cats.data.NonEmptyChain
 import cats.effect.Sync
-import cats.implicits.toFunctorOps
+import cats.syntax.functor._
 import io.circe.Decoder
 import io.circe.generic.semiauto.deriveDecoder
 import org.http4s.EntityDecoder

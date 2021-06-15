@@ -3,8 +3,8 @@ package infrastructure
 package http
 
 import cats.effect.{ConcurrentEffect, Timer}
-import cats.implicits.toSemigroupKOps
-import org.http4s.implicits.http4sKleisliResponseSyntaxOptionT
+import cats.syntax.semigroupk._
+import org.http4s.syntax.kleisli._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
