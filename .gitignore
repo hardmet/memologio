@@ -1,6 +1,7 @@
 target
 project/target
 project/project
+project/metals.sbt
 out
 data
 .idea
@@ -9,3 +10,4 @@ data
 .bloop
 .metals
 .DS_Store
+.bsp

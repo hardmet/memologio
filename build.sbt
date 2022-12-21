@@ -4,7 +4,7 @@ name := "memologio"
 
 version := "0.0.0"
 
-scalaVersion := "2.13.2"
+scalaVersion := "2.13.10"
 
 scalacOptions := List(
   "-encoding",
@@ -32,9 +32,9 @@ val tofuVersion = "0.7.4"
 
 
 addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
-addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.patch)
+addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.patch)
 addCompilerPlugin("org.augustjune" %% "context-applied" % "0.1.4")
-addCompilerPlugin("org.wartremover" %% "wartremover" % "2.4.5" cross CrossVersion.full)
+addCompilerPlugin("org.wartremover" %% "wartremover" % "3.0.7" cross CrossVersion.full)
 
 scalacOptions += "-P:wartremover:traverser:org.wartremover.warts.AsInstanceOf"
 scalacOptions += "-P:wartremover:traverser:org.wartremover.warts.MutableDataStructures"
